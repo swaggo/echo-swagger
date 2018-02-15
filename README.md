@@ -68,5 +68,5 @@ func main() {
 
 5. Run it, and browser to http://localhost:1323/swagger/index.html, you can see Swagger 2.0 Api documents.
 
-![swagger_index.html](https://user-images.githubusercontent.com/8943871/31943004-dd08a10e-b88c-11e7-9e77-19d2c759a586.png)
+![swagger_index.html](https://user-images.githubusercontent.com/8943871/36250587-40834072-1279-11e8-8bb7-02a2e2fdd7a7.png)
 
