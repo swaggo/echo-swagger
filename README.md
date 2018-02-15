@@ -20,14 +20,14 @@ $ go get github.com/swaggo/swag/cmd/swag
 ```sh
 $ swag init
 ```
-4.Download [gin-swagger](https://github.com/swaggo/echo-swagger) by using:
+4.Download [echo-swagger](https://github.com/swaggo/echo-swagger) by using:
 ```sh
 $ go get -u github.com/swaggo/echo-swagger
 ```
 And import following in your code:
 
 ```go
-import "github.com/swaggo/gin-swagger" // echo-swagger middleware
+import "github.com/swaggo/echo-swagger" // echo-swagger middleware
 ```
 
 ### Canonical example:
