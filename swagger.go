@@ -7,8 +7,8 @@ import (
 	"regexp"
 
 	"github.com/labstack/echo"
-	"github.com/swaggo/swag"
 	"github.com/swaggo/files"
+	"github.com/swaggo/swag"
 )
 
 var WrapHandler = wrapHandler(swaggerFiles.Handler)
