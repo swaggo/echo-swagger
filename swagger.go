@@ -11,13 +11,14 @@ import (
 	"github.com/swaggo/swag"
 )
 
+// WrapHandler wraps swaggerFiles.Handler and returns echo.HandlerFunc
 var WrapHandler = wrapHandler(swaggerFiles.Handler)
 
 // wapHandler wraps `http.Handler` into `gin.HandlerFunc`.
 func wrapHandler(h *webdav.Handler) echo.HandlerFunc {
 	//create a template with name
 	t := template.New("swagger_index.html")
-	index, _ := t.Parse(IndexTempl)
+	index, _ := t.Parse(indexTempl)
 
 	type pro struct {
 		Host string
@@ -53,7 +54,7 @@ func wrapHandler(h *webdav.Handler) echo.HandlerFunc {
 	}
 }
 
-const IndexTempl = `<!-- HTML for static distribution bundle build -->
+const indexTempl = `<!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
