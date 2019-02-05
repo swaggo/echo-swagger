@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/swaggo/files"
 	"github.com/swaggo/swag"
 )
@@ -16,7 +16,7 @@ var WrapHandler = wrapHandler(swaggerFiles.Handler)
 
 // wapHandler wraps `http.Handler` into `gin.HandlerFunc`.
 func wrapHandler(h *webdav.Handler) echo.HandlerFunc {
-	//create a template with name
+	// create a template with name
 	t := template.New("swagger_index.html")
 	index, _ := t.Parse(indexTempl)
 
