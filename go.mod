@@ -1,4 +1,4 @@
-module github.com/swaggo/echo-swagger/v2
+module github.com/swaggo/echo-swagger
 
 require (
 	github.com/go-openapi/jsonpointer v0.18.0 // indirect
