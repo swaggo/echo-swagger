@@ -25,5 +25,10 @@ func main() {
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
+	/*
+		Or can use EchoWrapHandler func with configurations.
+		url := echoSwagger.URL("http://localhost:1323/swagger/doc.json") //The url pointing to API definition
+		e.GET("/swagger/*", echoSwagger.EchoWrapHandler(url))
+	*/
 	e.Logger.Fatal(e.Start(":1323"))
 }
