@@ -47,7 +47,7 @@ func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
 		Host string
 	}
 
-	var re = regexp.MustCompile(`(.*)(index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[\?|.]*`)
+	var re = regexp.MustCompile(`(.*)(/|index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[\?|.]*`)
 
 	return func(c echo.Context) error {
 		var matches []string
@@ -60,8 +60,7 @@ func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
 		handler.Prefix = prefix
 
 		switch path {
-		case "index.html":
-
+		case "/", "index.html":
 			index.Execute(c.Response().Writer, config)
 		case "doc.json":
 			doc, _ := swag.ReadDoc()
