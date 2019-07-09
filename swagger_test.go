@@ -10,23 +10,30 @@ import (
 )
 
 func TestWrapHandler(t *testing.T) {
+	for _, prefix := range []string{"/", "/swagger/"} {
+		router := echo.New()
+		RegisterEchoHandler(router.GET, prefix, nil)
 
-	router := echo.New()
+		w1 := performRequest("GET", prefix+"index.html", router)
+		assert.Equal(t, 200, w1.Code, prefix)
+		indexContent := w1.Body.Bytes()
 
-	router.GET("/*", WrapHandler)
+		w1_2 := performRequest("GET", prefix+"", router)
+		assert.Equal(t, 200, w1_2.Code, prefix)
+		assert.Equal(t, indexContent, w1_2.Body.Bytes())
 
-	w1 := performRequest("GET", "/index.html", router)
-	assert.Equal(t, 200, w1.Code)
+		w2 := performRequest("GET", prefix+"doc.json", router)
+		assert.Equal(t, 200, w2.Code, prefix)
 
-	w2 := performRequest("GET", "/doc.json", router)
-	assert.Equal(t, 200, w2.Code)
+		w3 := performRequest("GET", prefix+"favicon-16x16.png", router)
+		assert.Equal(t, 200, w3.Code, prefix)
 
-	w3 := performRequest("GET", "/favicon-16x16.png", router)
-	assert.Equal(t, 200, w3.Code)
+		w3_1 := performRequest("GET", prefix+"swagger-ui.css", router)
+		assert.Equal(t, 200, w3_1.Code, prefix)
 
-	w4 := performRequest("GET", "/notfound", router)
-	assert.Equal(t, 404, w4.Code)
-
+		w4 := performRequest("GET", prefix+"notfound", router)
+		assert.Equal(t, 404, w4.Code, prefix)
+	}
 }
 
 func performRequest(method, target string, e *echo.Echo) *httptest.ResponseRecorder {

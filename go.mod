@@ -14,7 +14,7 @@ require (
 	github.com/swaggo/gin-swagger v1.0.0
 	github.com/swaggo/swag v1.4.0
 	golang.org/x/crypto v0.0.0-20190131182504-b8fe1690c613 // indirect
-	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3
+	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3 // indirect
 	golang.org/x/sys v0.0.0-20190204203706-41f3e6584952 // indirect
 	golang.org/x/tools v0.0.0-20190205050122-7f7074d5bcfd // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
