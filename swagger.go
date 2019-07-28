@@ -4,9 +4,10 @@ import (
 	"html/template"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/labstack/echo/v4"
-	"github.com/swaggo/files"
+	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/swag"
 )
 
@@ -58,6 +59,18 @@ func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
 		path := matches[2]
 		prefix := matches[1]
 		handler.Prefix = prefix
+
+		if strings.HasSuffix(path, ".html") {
+			c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+		} else if strings.HasSuffix(path, ".css") {
+			c.Response().Header().Set("Content-Type", "text/css; charset=utf-8")
+		} else if strings.HasSuffix(path, ".js") {
+			c.Response().Header().Set("Content-Type", "application/javascript")
+		} else if strings.HasSuffix(path, ".json") {
+			c.Response().Header().Set("Content-Type", "application/json")
+		} else if strings.HasSuffix(path, ".png") {
+			c.Response().Header().Set("Content-Type", "image/png")
+		}
 
 		switch path {
 		case "index.html":
