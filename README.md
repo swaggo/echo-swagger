@@ -69,3 +69,17 @@ func main() {
 
 ![swagger_index.html](https://user-images.githubusercontent.com/8943871/36250587-40834072-1279-11e8-8bb7-02a2e2fdd7a7.png)
 
+Note: If you are using Gzip middleware you should add the swagger endpoint to skipper
+
+### Example
+
+```
+e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Skipper: func(c echo.Context) bool {
+			if strings.Contains(c.Request().URL.Path, "swagger") {
+				return true
+			}
+			return false
+		},
+	}))
+```
