@@ -51,6 +51,8 @@ func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
 		_, path := path.Split(c.Request().RequestURI)
 
 		switch path {
+		case "":
+			fallthrough
 		case "index.html":
 			index.Execute(c.Response().Writer, config)
 		case "doc.json":
