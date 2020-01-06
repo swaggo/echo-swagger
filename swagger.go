@@ -54,7 +54,11 @@ func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
 		case "index.html":
 			index.Execute(c.Response().Writer, config)
 		case "doc.json":
-			doc, _ := swag.ReadDoc()
+			doc, err := swag.ReadDoc()
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err)
+			}
+			c.Response().Header().Set("Content-Type", "application/json")
 			c.Response().Write([]byte(doc))
 		default:
 			handler.ServeHTTP(c.Response().Writer, c.Request())
