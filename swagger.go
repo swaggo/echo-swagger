@@ -2,6 +2,7 @@ package echoSwagger
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 	"regexp"
 
@@ -41,7 +42,10 @@ func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
 
 	// create a template with name
 	t := template.New("swagger_index.html")
-	index, _ := t.Parse(indexTempl)
+	index, err := t.Parse(indexTempl)
+	if err != nil {
+		log.Fatal("Unable to parse index.html template for echo-swagger:", err)
+	}
 
 	var re = regexp.MustCompile(`(.*)(index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[\?|.]*`)
 
