@@ -13,8 +13,24 @@ import (
 
 // Config stores echoSwagger configuration variables.
 type Config struct {
-	//The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `doc.json`.
+	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `doc.json`.
 	URL string
+
+	// The information for OAuth2 integration, if any.
+	OAuth *OAuthConfig
+}
+
+// Configuration for Swagger UI OAuth2 integration. See
+// https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/ for further details.
+type OAuthConfig struct {
+	// The ID of the client sent to the OAuth2 IAM provider.
+	ClientId string
+
+	// The OAuth2 realm that the client should operate in. If not applicable, use empty string.
+	Realm string
+
+	// The name to display for the application in the authentication popup.
+	AppName string
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -157,6 +173,14 @@ window.onload = function() {
     ],
     layout: "StandaloneLayout"
   })
+
+  {{if .OAuth}}
+  ui.initOAuth({
+    clientId: "{{.OAuth.ClientId}}",
+    realm: "{{.OAuth.Realm}}",
+    appName: "{{.OAuth.AppName}}"
+  })
+  {{end}}
 
   window.ui = ui
 }
