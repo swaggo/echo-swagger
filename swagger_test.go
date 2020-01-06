@@ -37,14 +37,12 @@ func TestWrapHandler(t *testing.T) {
 func TestConfig(t *testing.T) {
 	router := echo.New()
 
-	swaggerHandler := EchoWrapHandler(func(c *Config) {
-		c.URL = "example.org/swagger.json"
-	})
-	router.GET("/*", swaggerHandler)
+	swaggerHandler := URL("http://example.org/swagger.json")
+	router.GET("/*", EchoWrapHandler(swaggerHandler))
 
 	w := performRequest("GET", "/", router)
 	assert.Equal(t, 200, w.Code)
-	assert.Contains(t, w.Body.String(), "url: \"example.org/swagger.json\"")
+	assert.Contains(t, w.Body.String(), "url: \"http:\\/\\/example.org\\/swagger.json\"")
 }
 
 func TestConfigWithOAuth(t *testing.T) {
