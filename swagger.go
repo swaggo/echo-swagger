@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo"
 	"github.com/swaggo/files"
 	"github.com/swaggo/swag"
 )
