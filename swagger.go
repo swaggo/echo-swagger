@@ -26,17 +26,18 @@ func URL(url string) func(c *Config) {
 // WrapHandler wraps swaggerFiles.Handler and returns echo.HandlerFunc
 var WrapHandler = EchoWrapHandler()
 
-// EchoWrapHandler wraps `http.Handler` into `echo.HandlerFunc`.
+// EchoWrapHandler is the same as EchoWrapHandlerName, but uses the default swag ID.
 func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
+	return EchoWrapHandlerName(swag.Name, confs...)
+}
+
+// EchoWrapHandlerName wraps `http.Handler` into `echo.HandlerFunc` with a specific swag ID.
+func EchoWrapHandlerName(swagID string, confs ...func(c *Config)) echo.HandlerFunc {
 
 	handler := swaggerFiles.Handler
 
 	config := &Config{
 		URL: "doc.json",
-	}
-
-	for _, c := range confs {
-		c(config)
 	}
 
 	// create a template with name
@@ -64,7 +65,7 @@ func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
 
 			index.Execute(c.Response().Writer, config)
 		case "doc.json":
-			doc, _ := swag.ReadDoc()
+			doc, _ := swag.ReadDocName(swagID)
 			c.Response().Write([]byte(doc))
 		default:
 			handler.ServeHTTP(c.Response().Writer, c.Request())
