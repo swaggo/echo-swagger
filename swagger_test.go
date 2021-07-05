@@ -4,7 +4,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 	_ "github.com/swaggo/echo-swagger/example/docs"
 )

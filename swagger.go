@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/labstack/echo/v4"
-	"github.com/swaggo/files"
+	"github.com/labstack/echo"
+	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/swag"
 )
 
