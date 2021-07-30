@@ -1,4 +1,4 @@
-module github.com/swaggo/echo-swagger
+module github.com/vinshop/echo-swagger
 
 require (
 	github.com/go-openapi/spec v0.20.0 // indirect

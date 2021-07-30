@@ -6,7 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	_ "github.com/swaggo/echo-swagger/example/docs"
+	_ "github.com/vinshop/echo-swagger/example/docs"
 )
 
 func TestWrapHandler(t *testing.T) {
