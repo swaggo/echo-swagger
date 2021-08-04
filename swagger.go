@@ -12,8 +12,11 @@ import (
 
 // Config stores echoSwagger configuration variables.
 type Config struct {
-	//The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `doc.json`.
-	URL string
+	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
+	URL          string
+	DeepLinking  bool
+	DocExpansion string
+	DomID        string
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -23,20 +26,44 @@ func URL(url string) func(c *Config) {
 	}
 }
 
+// DeepLinking true, false.
+func DeepLinking(deepLinking bool) func(c *Config) {
+	return func(c *Config) {
+		c.DeepLinking = deepLinking
+	}
+}
+
+// DocExpansion list, full, none.
+func DocExpansion(docExpansion string) func(c *Config) {
+	return func(c *Config) {
+		c.DocExpansion = docExpansion
+	}
+}
+
+// DomID #swagger-ui.
+func DomID(domID string) func(c *Config) {
+	return func(c *Config) {
+		c.DomID = domID
+	}
+}
+
 // WrapHandler wraps swaggerFiles.Handler and returns echo.HandlerFunc
 var WrapHandler = EchoWrapHandler()
 
 // EchoWrapHandler wraps `http.Handler` into `echo.HandlerFunc`.
-func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
+func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 
 	handler := swaggerFiles.Handler
 
 	config := &Config{
-		URL: "doc.json",
+		URL:          "doc.json",
+		DeepLinking:  true,
+		DocExpansion: "list",
+		DomID:        "#swagger-ui",
 	}
 
-	for _, c := range confs {
-		c(config)
+	for _, configFn := range configFns {
+		configFn(config)
 	}
 
 	// create a template with name
@@ -61,14 +88,19 @@ func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
 
 		switch path {
 		case "index.html":
-
-			index.Execute(c.Response().Writer, config)
+			_ = index.Execute(c.Response().Writer, config)
 		case "doc.json":
-			doc, _ := swag.ReadDoc()
-			c.Response().Write([]byte(doc))
+			doc, err := swag.ReadDoc()
+			if err != nil {
+				http.Error(c.Response().Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+				return nil
+			}
+
+			c.Response().Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+			_, _ = c.Response().Writer.Write([]byte(doc))
 		default:
 			handler.ServeHTTP(c.Response().Writer, c.Request())
-
 		}
 
 		return nil
@@ -147,11 +179,13 @@ const indexTempl = `<!-- HTML for static distribution bundle build -->
 <script src="./swagger-ui-bundle.js"> </script>
 <script src="./swagger-ui-standalone-preset.js"> </script>
 <script>
-window.onload = function() {
+wwindow.onload = function() {
   // Build a system
   const ui = SwaggerUIBundle({
     url: "{{.URL}}",
-    dom_id: '#swagger-ui',
+    deepLinking: {{.DeepLinking}},
+    docExpansion: "{{.DocExpansion}}",
+    dom_id: "{{.DomID}}",
     validatorUrl: null,
     presets: [
       SwaggerUIBundle.presets.apis,
@@ -162,7 +196,6 @@ window.onload = function() {
     ],
     layout: "StandaloneLayout"
   })
-
   window.ui = ui
 }
 </script>
