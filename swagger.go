@@ -179,7 +179,7 @@ const indexTempl = `<!-- HTML for static distribution bundle build -->
 <script src="./swagger-ui-bundle.js"> </script>
 <script src="./swagger-ui-standalone-preset.js"> </script>
 <script>
-wwindow.onload = function() {
+window.onload = function() {
   // Build a system
   const ui = SwaggerUIBundle({
     url: "{{.URL}}",
