@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/labstack/echo/v4"
-	"github.com/swaggo/files"
+	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/swag"
 )
 
@@ -85,6 +85,8 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 		path := matches[2]
 		prefix := matches[1]
 		handler.Prefix = prefix
+
+		defer c.Response().Flush()
 
 		switch path {
 		case "index.html":
