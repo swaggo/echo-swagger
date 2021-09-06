@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"regexp"
+	"sync"
 
 	"github.com/labstack/echo/v4"
 	"github.com/swaggo/files"
@@ -52,6 +53,7 @@ var WrapHandler = EchoWrapHandler()
 
 // EchoWrapHandler wraps `http.Handler` into `echo.HandlerFunc`.
 func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
+	var once sync.Once
 
 	handler := swaggerFiles.Handler
 
@@ -68,23 +70,19 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 
 	// create a template with name
 	t := template.New("swagger_index.html")
-	index, _ := t.Parse(indexTempl)
+	index, _ := t.Parse(indexTemplate)
 
-	type pro struct {
-		Host string
-	}
-
-	var re = regexp.MustCompile(`(.*)(index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[\?|.]*`)
+	var re = regexp.MustCompile(`(.*)(index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[?|.]*`)
 
 	return func(c echo.Context) error {
 		var matches []string
 		if matches = re.FindStringSubmatch(c.Request().RequestURI); len(matches) != 3 {
-
 			return c.String(http.StatusNotFound, "404 page not found")
 		}
 		path := matches[2]
-		prefix := matches[1]
-		handler.Prefix = prefix
+		once.Do(func() {
+			handler.Prefix = matches[1]
+		})
 
 		switch path {
 		case "index.html":
@@ -107,7 +105,7 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 	}
 }
 
-const indexTempl = `<!-- HTML for static distribution bundle build -->
+const indexTemplate = `<!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
