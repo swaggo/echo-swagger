@@ -5,6 +5,7 @@ echo middleware to automatically generate RESTful API documentation with Swagger
 [![Build Status](https://github.com/swaggo/echo-swagger/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/features/actions)
 [![Codecov branch](https://img.shields.io/codecov/c/github/swaggo/echo-swagger/master.svg)](https://codecov.io/gh/swaggo/echo-swagger)
 [![Go Report Card](https://goreportcard.com/badge/github.com/swaggo/echo-swagger)](https://goreportcard.com/report/github.com/swaggo/echo-swagger)
+[![Release](https://img.shields.io/github/release/swaggo/echo-swagger.svg?style=flat-square)](https://github.com/swaggo/echo-swagger/releases)
 
 
 ## Usage
