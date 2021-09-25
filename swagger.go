@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/labstack/echo/v4"
-	"github.com/swaggo/files"
+	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/swag"
 )
 
@@ -83,6 +83,8 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 		once.Do(func() {
 			handler.Prefix = matches[1]
 		})
+
+		defer c.Response().Flush()
 
 		switch path {
 		case "index.html":
