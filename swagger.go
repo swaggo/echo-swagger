@@ -3,6 +3,7 @@ package echoSwagger
 import (
 	"html/template"
 	"net/http"
+	"path/filepath"
 	"regexp"
 	"sync"
 
@@ -82,6 +83,18 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 			h.Prefix = matches[1]
 		})
 
+
+		switch filepath.Ext(path) {
+		case ".html":
+			c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+		case ".css":
+			c.Response().Header().Set("Content-Type", "text/css; charset=utf-8")
+		case ".js":
+			c.Response().Header().Set("Content-Type", "application/javascript")
+		case ".json":
+			c.Response().Header().Set("Content-Type", "application/json; charset=utf-8")
+		}
+
 		defer c.Response().Flush()
 		switch path {
 		case "":
@@ -96,7 +109,6 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 				return nil
 			}
 
-			c.Response().Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 			_, _ = c.Response().Writer.Write([]byte(doc))
 		default:
 			h.ServeHTTP(c.Response().Writer, c.Request())
