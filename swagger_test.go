@@ -235,6 +235,7 @@ func TestWrapHandler(t *testing.T) {
 
 	router := echo.New()
 
+	//RegisterEchoHandler(router.GET, "/", nil)
 	router.GET("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
 
 	w1 := performRequest("GET", "/index.html", router)
@@ -253,6 +254,8 @@ func TestWrapHandler(t *testing.T) {
 	w4 := performRequest("GET", "/notfound", router)
 	assert.Equal(t, 404, w4.Code)
 
+	w5 := performRequest("GET", "/", router)
+	assert.Equal(t, 301, w5.Code)
 }
 
 func performRequest(method, target string, e *echo.Echo) *httptest.ResponseRecorder {
