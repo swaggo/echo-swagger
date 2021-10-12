@@ -232,7 +232,6 @@ func (s *mockedSwag) ReadDoc() string {
 }
 
 func TestWrapHandler(t *testing.T) {
-
 	router := echo.New()
 
 	router.GET("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
@@ -261,7 +260,6 @@ func TestWrapHandler(t *testing.T) {
 
 	w6 := performRequest("GET", "/notfound", router)
 	assert.Equal(t, 404, w6.Code)
-
 }
 
 func performRequest(method, target string, e *echo.Echo) *httptest.ResponseRecorder {
