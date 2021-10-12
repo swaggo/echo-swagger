@@ -83,6 +83,7 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 			h.Prefix = matches[1]
 		})
 
+
 		switch filepath.Ext(path) {
 		case ".html":
 			c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")

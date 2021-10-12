@@ -232,7 +232,6 @@ func (s *mockedSwag) ReadDoc() string {
 }
 
 func TestWrapHandler(t *testing.T) {
-
 	router := echo.New()
 
 	router.GET("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
