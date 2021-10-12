@@ -83,7 +83,6 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 			h.Prefix = matches[1]
 		})
 
-
 		switch filepath.Ext(path) {
 		case ".html":
 			c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -93,6 +92,8 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 			c.Response().Header().Set("Content-Type", "application/javascript")
 		case ".json":
 			c.Response().Header().Set("Content-Type", "application/json; charset=utf-8")
+		case ".png":
+			c.Response().Header().Set("Content-Type", "image/png")
 		}
 
 		defer c.Response().Flush()

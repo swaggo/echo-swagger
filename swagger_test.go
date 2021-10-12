@@ -249,6 +249,7 @@ func TestWrapHandler(t *testing.T) {
 
 	w3 := performRequest("GET", "/favicon-16x16.png", router)
 	assert.Equal(t, 200, w3.Code)
+	assert.Equal(t, w3.Header()["Content-Type"][0], "image/png")
 
 	w4 := performRequest("GET", "/swagger-ui.css", router)
 	assert.Equal(t, 200, w4.Code)
