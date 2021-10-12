@@ -240,6 +240,7 @@ func TestWrapHandler(t *testing.T) {
 
 	w1 := performRequest("GET", "/index.html", router)
 	assert.Equal(t, 200, w1.Code)
+	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
 	w2 := performRequest("GET", "/doc.json", router)
 	assert.Equal(t, 500, w2.Code)
@@ -251,8 +252,16 @@ func TestWrapHandler(t *testing.T) {
 	w3 := performRequest("GET", "/favicon-16x16.png", router)
 	assert.Equal(t, 200, w3.Code)
 
-	w4 := performRequest("GET", "/notfound", router)
-	assert.Equal(t, 404, w4.Code)
+	w4 := performRequest("GET", "/swagger-ui.css", router)
+	assert.Equal(t, 200, w4.Code)
+	assert.Equal(t, w4.Header()["Content-Type"][0], "text/css; charset=utf-8")
+
+	w5 := performRequest("GET", "/swagger-ui-bundle.js", router)
+	assert.Equal(t, 200, w5.Code)
+	assert.Equal(t, w5.Header()["Content-Type"][0], "application/javascript")
+
+	w6 := performRequest("GET", "/notfound", router)
+	assert.Equal(t, 404, w6.Code)
 
 	w5 := performRequest("GET", "/", router)
 	assert.Equal(t, 301, w5.Code)
