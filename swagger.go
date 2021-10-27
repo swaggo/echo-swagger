@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	swaggerFiles "github.com/swaggo/files"
 	"github.com/swaggo/swag"
+	"golang.org/x/net/webdav"
 )
 
 // Config stores echoSwagger configuration variables.
@@ -56,8 +57,6 @@ var WrapHandler = EchoWrapHandler()
 func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 	var once sync.Once
 
-	h := swaggerFiles.Handler
-
 	config := &Config{
 		URL:          "doc.json",
 		DeepLinking:  true,
@@ -74,6 +73,11 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 	index, _ := t.Parse(indexTemplate)
 
 	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
+
+	h := webdav.Handler{
+		FileSystem: swaggerFiles.FS,
+		LockSystem: webdav.NewMemLS(),
+	}
 
 	return func(c echo.Context) error {
 		matches := re.FindStringSubmatch(c.Request().RequestURI)

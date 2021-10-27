@@ -266,6 +266,29 @@ func TestWrapHandler(t *testing.T) {
 	assert.Equal(t, 301, w7.Code)
 }
 
+func TestHandlerReuse(t *testing.T) {
+	router := echo.New()
+
+	router.GET("/swagger/*", EchoWrapHandler())
+	router.GET("/admin/swagger/*", EchoWrapHandler())
+
+	w1 := performRequest("GET", "/swagger/index.html", router)
+	assert.Equal(t, 200, w1.Code)
+	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
+
+	w2 := performRequest("GET", "/admin/swagger/index.html", router)
+	assert.Equal(t, 200, w2.Code)
+	assert.Equal(t, w2.Header()["Content-Type"][0], "text/html; charset=utf-8")
+
+	w3 := performRequest("GET", "/swagger/index.html", router)
+	assert.Equal(t, 200, w3.Code)
+	assert.Equal(t, w3.Header()["Content-Type"][0], "text/html; charset=utf-8")
+
+	w4 := performRequest("GET", "/admin/swagger/index.html", router)
+	assert.Equal(t, 200, w4.Code)
+	assert.Equal(t, w4.Header()["Content-Type"][0], "text/html; charset=utf-8")
+}
+
 func performRequest(method, target string, e *echo.Echo) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, target, nil)
 	w := httptest.NewRecorder()
