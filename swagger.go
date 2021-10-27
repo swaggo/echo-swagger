@@ -2,7 +2,6 @@ package echoSwagger
 
 import (
 	"html/template"
-	"net/http"
 	"path/filepath"
 	"regexp"
 	"sync"
@@ -105,7 +104,7 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 		case "doc.json":
 			doc, err := swag.ReadDoc()
 			if err != nil {
-				http.Error(c.Response().Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				c.Error(err)
 
 				return nil
 			}
