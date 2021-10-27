@@ -1,6 +1,7 @@
 package echoSwagger
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -236,33 +237,33 @@ func TestWrapHandler(t *testing.T) {
 
 	router.GET("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
 
-	w1 := performRequest("GET", "/index.html", router)
+	w1 := performRequest(http.MethodGet, "/index.html", router)
 	assert.Equal(t, 200, w1.Code)
 	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
-	w2 := performRequest("GET", "/doc.json", router)
+	w2 := performRequest(http.MethodGet, "/doc.json", router)
 	assert.Equal(t, 500, w2.Code)
 
 	swag.Register(swag.Name, &mockedSwag{})
-	w2 = performRequest("GET", "/doc.json", router)
+	w2 = performRequest(http.MethodGet, "/doc.json", router)
 	assert.Equal(t, 200, w2.Code)
 
-	w3 := performRequest("GET", "/favicon-16x16.png", router)
+	w3 := performRequest(http.MethodGet, "/favicon-16x16.png", router)
 	assert.Equal(t, 200, w3.Code)
 	assert.Equal(t, w3.Header()["Content-Type"][0], "image/png")
 
-	w4 := performRequest("GET", "/swagger-ui.css", router)
+	w4 := performRequest(http.MethodGet, "/swagger-ui.css", router)
 	assert.Equal(t, 200, w4.Code)
 	assert.Equal(t, w4.Header()["Content-Type"][0], "text/css; charset=utf-8")
 
-	w5 := performRequest("GET", "/swagger-ui-bundle.js", router)
+	w5 := performRequest(http.MethodGet, "/swagger-ui-bundle.js", router)
 	assert.Equal(t, 200, w5.Code)
 	assert.Equal(t, w5.Header()["Content-Type"][0], "application/javascript")
 
-	w6 := performRequest("GET", "/notfound", router)
+	w6 := performRequest(http.MethodGet, "/notfound", router)
 	assert.Equal(t, 404, w6.Code)
 
-	w7 := performRequest("GET", "/", router)
+	w7 := performRequest(http.MethodGet, "/", router)
 	assert.Equal(t, 301, w7.Code)
 }
 
@@ -272,24 +273,45 @@ func TestHandlerReuse(t *testing.T) {
 	router.GET("/swagger/*", EchoWrapHandler())
 	router.GET("/admin/swagger/*", EchoWrapHandler())
 
-	w1 := performRequest("GET", "/swagger/index.html", router)
+	w1 := performRequest(http.MethodGet, "/swagger/index.html", router)
 	assert.Equal(t, 200, w1.Code)
 	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
-	w2 := performRequest("GET", "/admin/swagger/index.html", router)
+	w2 := performRequest(http.MethodGet, "/admin/swagger/index.html", router)
 	assert.Equal(t, 200, w2.Code)
 	assert.Equal(t, w2.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
-	w3 := performRequest("GET", "/swagger/index.html", router)
+	w3 := performRequest(http.MethodGet, "/swagger/index.html", router)
 	assert.Equal(t, 200, w3.Code)
 	assert.Equal(t, w3.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
-	w4 := performRequest("GET", "/admin/swagger/index.html", router)
+	w4 := performRequest(http.MethodGet, "/admin/swagger/index.html", router)
 	assert.Equal(t, 200, w4.Code)
 	assert.Equal(t, w4.Header()["Content-Type"][0], "text/html; charset=utf-8")
 }
 
-func performRequest(method, target string, e *echo.Echo) *httptest.ResponseRecorder {
+type httpWriter struct{}
+
+func (h httpWriter) Header() http.Header {
+	return http.Header{}
+}
+
+func (h httpWriter) Write(bytes []byte) (int, error) {
+	return len(bytes), nil
+}
+
+func (h httpWriter) WriteHeader(_ int) {}
+
+func TestMissingFlusher(t *testing.T) {
+	router := echo.New()
+
+	router.GET("/swagger/*", EchoWrapHandler())
+
+	r := httptest.NewRequest(http.MethodGet, "/swagger/index.html", nil)
+	router.ServeHTTP(httpWriter{}, r)
+}
+
+func performRequest(method, target string, e http.Handler) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, target, nil)
 	w := httptest.NewRecorder()
 

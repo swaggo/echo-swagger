@@ -2,6 +2,7 @@ package echoSwagger
 
 import (
 	"html/template"
+	"net/http"
 	"path/filepath"
 	"regexp"
 	"sync"
@@ -99,7 +100,12 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 			c.Response().Header().Set("Content-Type", "image/png")
 		}
 
-		defer c.Response().Flush()
+		response := c.Response()
+		// This check fixes an error introduced here: https://github.com/labstack/echo/blob/8da8e161380fd926d4341721f0328f1e94d6d0a2/response.go#L86-L88
+		if _, ok := response.Writer.(http.Flusher); ok {
+			defer response.Flush()
+		}
+
 		switch path {
 		case "":
 			c.Redirect(301, h.Prefix+"index.html")
