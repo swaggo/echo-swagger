@@ -20,6 +20,7 @@ type Config struct {
 	DeepLinking  bool
 	DocExpansion string
 	DomID        string
+	RedirectUrl  interface{}
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -50,6 +51,13 @@ func DomID(domID string) func(c *Config) {
 	}
 }
 
+// Redirect URL for oauth2-redirect
+func RedirectUrl(redirectUrl string) func(c *Config) {
+	return func(c *Config) {
+		c.RedirectUrl = redirectUrl
+	}
+}
+
 // WrapHandler wraps swaggerFiles.Handler and returns echo.HandlerFunc
 var WrapHandler = EchoWrapHandler()
 
@@ -62,6 +70,7 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 		DeepLinking:  true,
 		DocExpansion: "list",
 		DomID:        "#swagger-ui",
+		RedirectUrl:  nil,
 	}
 
 	for _, configFn := range configFns {
@@ -208,6 +217,9 @@ window.onload = function() {
     docExpansion: "{{.DocExpansion}}",
     dom_id: "{{.DomID}}",
     validatorUrl: null,
+	{{if .RedirectUrl}}
+		oauth2RedirectUrl: {{.RedirectUrl}},
+	{{end}}
     presets: [
       SwaggerUIBundle.presets.apis,
       SwaggerUIStandalonePreset
