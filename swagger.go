@@ -20,6 +20,7 @@ type Config struct {
 	DeepLinking  bool
 	DocExpansion string
 	DomID        string
+	RedirectUrl  *string
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -47,6 +48,13 @@ func DocExpansion(docExpansion string) func(c *Config) {
 func DomID(domID string) func(c *Config) {
 	return func(c *Config) {
 		c.DomID = domID
+	}
+}
+
+// Redirect URL for oauth2-redirect
+func RedirectUrl(redirectUrl string) func(c *Config) {
+	return func(c *Config) {
+		c.RedirectUrl = redirectUrl
 	}
 }
 
@@ -208,6 +216,9 @@ window.onload = function() {
     docExpansion: "{{.DocExpansion}}",
     dom_id: "{{.DomID}}",
     validatorUrl: null,
+	{{if .RedirectUrl}}
+		oauth2RedirectUrl: {{.RedirectUrl}},
+	{{end}}
     presets: [
       SwaggerUIBundle.presets.apis,
       SwaggerUIStandalonePreset
