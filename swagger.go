@@ -20,7 +20,7 @@ type Config struct {
 	DeepLinking  bool
 	DocExpansion string
 	DomID        string
-	RedirectUrl  interface{}
+	RedirectUrl  *string
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -70,7 +70,6 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 		DeepLinking:  true,
 		DocExpansion: "list",
 		DomID:        "#swagger-ui",
-		RedirectUrl:  nil,
 	}
 
 	for _, configFn := range configFns {
