@@ -350,3 +350,11 @@ func TestDomID(t *testing.T) {
 	configFunc(&cfg)
 	assert.Equal(t, expected, cfg.DomID)
 }
+
+func TestInstanceName(t *testing.T) {
+	expected := "custom-instance-name"
+	cfg := Config{}
+	configFunc := InstanceName(expected)
+	configFunc(&cfg)
+	assert.Equal(t, expected, cfg.InstanceName)
+}
