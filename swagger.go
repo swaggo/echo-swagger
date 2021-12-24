@@ -20,6 +20,7 @@ type Config struct {
 	DeepLinking  bool
 	DocExpansion string
 	DomID        string
+	InstanceName string
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -47,6 +48,13 @@ func DocExpansion(docExpansion string) func(c *Config) {
 func DomID(domID string) func(c *Config) {
 	return func(c *Config) {
 		c.DomID = domID
+	}
+}
+
+// InstanceName specified swag instance name
+func InstanceName(instanceName string) func(c *Config) {
+	return func(c *Config) {
+		c.InstanceName = instanceName
 	}
 }
 
@@ -112,7 +120,7 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 		case "index.html":
 			_ = index.Execute(c.Response().Writer, config)
 		case "doc.json":
-			doc, err := swag.ReadDoc()
+			doc, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
 				c.Error(err)
 
