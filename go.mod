@@ -14,4 +14,4 @@ require (
 	golang.org/x/tools v0.0.0-20201207182000-5679438983bd // indirect
 )
 
-go 1.13
+go 1.15
