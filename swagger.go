@@ -75,11 +75,10 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 	var once sync.Once
 
 	config := &Config{
-		URL:                  "doc.json",
-		DeepLinking:          true,
-		DocExpansion:         "list",
-		DomID:                "#swagger-ui",
-		PersistAuthorization: false,
+		URL:          "doc.json",
+		DeepLinking:  true,
+		DocExpansion: "list",
+		DomID:        "#swagger-ui",
 	}
 
 	for _, configFn := range configFns {
@@ -224,7 +223,7 @@ window.onload = function() {
     url: "{{.URL}}",
     deepLinking: {{.DeepLinking}},
     docExpansion: "{{.DocExpansion}}",
-	persistAuthorization: {{.PersistAuthorization}},
+    persistAuthorization: {{.PersistAuthorization}},
     dom_id: "{{.DomID}}",
     validatorUrl: null,
     presets: [
