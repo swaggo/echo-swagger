@@ -16,11 +16,12 @@ import (
 // Config stores echoSwagger configuration variables.
 type Config struct {
 	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
-	URL          string
-	DeepLinking  bool
-	DocExpansion string
-	DomID        string
-	InstanceName string
+	URL                  string
+	DeepLinking          bool
+	DocExpansion         string
+	DomID                string
+	InstanceName         string
+	PersistAuthorization bool
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -55,6 +56,14 @@ func DomID(domID string) func(c *Config) {
 func InstanceName(instanceName string) func(c *Config) {
 	return func(c *Config) {
 		c.InstanceName = instanceName
+	}
+}
+
+// If set to true, it persists authorization data and it would not be lost on browser close/refresh
+// Defaults to false
+func PersistAuthorization(persistAuthorization bool) func(c *Config) {
+	return func(c *Config) {
+		c.PersistAuthorization = persistAuthorization
 	}
 }
 
@@ -214,6 +223,7 @@ window.onload = function() {
     url: "{{.URL}}",
     deepLinking: {{.DeepLinking}},
     docExpansion: "{{.DocExpansion}}",
+    persistAuthorization: {{.PersistAuthorization}},
     dom_id: "{{.DomID}}",
     validatorUrl: null,
     presets: [
