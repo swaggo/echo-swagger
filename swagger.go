@@ -16,11 +16,12 @@ import (
 // Config stores echoSwagger configuration variables.
 type Config struct {
 	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
-	URL          string
-	DeepLinking  bool
-	DocExpansion string
-	DomID        string
-	InstanceName string
+	URL                  string
+	DeepLinking          bool
+	DocExpansion         string
+	DomID                string
+	InstanceName         string
+	PersistAuthorization bool
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -58,6 +59,14 @@ func InstanceName(instanceName string) func(c *Config) {
 	}
 }
 
+// If set to true, it persists authorization data and it would not be lost on browser close/refresh
+// Defaults to false
+func PersistAuthorization(persistAuthorization bool) func(c *Config) {
+	return func(c *Config) {
+		c.PersistAuthorization = persistAuthorization
+	}
+}
+
 // WrapHandler wraps swaggerFiles.Handler and returns echo.HandlerFunc
 var WrapHandler = EchoWrapHandler()
 
@@ -66,10 +75,11 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 	var once sync.Once
 
 	config := &Config{
-		URL:          "doc.json",
-		DeepLinking:  true,
-		DocExpansion: "list",
-		DomID:        "#swagger-ui",
+		URL:                  "doc.json",
+		DeepLinking:          true,
+		DocExpansion:         "list",
+		DomID:                "#swagger-ui",
+		PersistAuthorization: false,
 	}
 
 	for _, configFn := range configFns {
@@ -214,6 +224,7 @@ window.onload = function() {
     url: "{{.URL}}",
     deepLinking: {{.DeepLinking}},
     docExpansion: "{{.DocExpansion}}",
+	persistAuthorization: {{.PersistAuthorization}},
     dom_id: "{{.DomID}}",
     validatorUrl: null,
     presets: [

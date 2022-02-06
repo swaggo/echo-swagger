@@ -358,3 +358,11 @@ func TestInstanceName(t *testing.T) {
 	configFunc(&cfg)
 	assert.Equal(t, expected, cfg.InstanceName)
 }
+
+func TestPersistAuthorization(t *testing.T) {
+	expected := true
+	cfg := Config{}
+	configFunc := PersistAuthorization(expected)
+	configFunc(&cfg)
+	assert.Equal(t, expected, cfg.PersistAuthorization)
+}
