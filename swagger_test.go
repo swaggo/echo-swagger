@@ -235,7 +235,7 @@ func (s *mockedSwag) ReadDoc() string {
 func TestWrapHandler(t *testing.T) {
 	router := echo.New()
 
-	router.GET("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
+	router.Any("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
 
 	w1 := performRequest(http.MethodGet, "/index.html", router)
 	assert.Equal(t, http.StatusOK, w1.Code)
