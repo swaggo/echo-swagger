@@ -97,6 +97,10 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 	}
 
 	return func(c echo.Context) error {
+		if c.Request().Method != http.MethodGet {
+			return echo.NewHTTPError(http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed))
+		}
+
 		matches := re.FindStringSubmatch(c.Request().RequestURI)
 		path := matches[2]
 
@@ -125,7 +129,7 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 
 		switch path {
 		case "":
-			c.Redirect(301, h.Prefix+"index.html")
+			c.Redirect(http.StatusMovedPermanently, h.Prefix+"index.html")
 		case "index.html":
 			_ = index.Execute(c.Response().Writer, config)
 		case "doc.json":

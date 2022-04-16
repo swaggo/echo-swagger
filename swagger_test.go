@@ -235,36 +235,39 @@ func (s *mockedSwag) ReadDoc() string {
 func TestWrapHandler(t *testing.T) {
 	router := echo.New()
 
-	router.GET("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
+	router.Any("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
 
 	w1 := performRequest(http.MethodGet, "/index.html", router)
-	assert.Equal(t, 200, w1.Code)
+	assert.Equal(t, http.StatusOK, w1.Code)
 	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
-	w2 := performRequest(http.MethodGet, "/doc.json", router)
-	assert.Equal(t, 500, w2.Code)
+	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
 
 	swag.Register(swag.Name, &mockedSwag{})
-	w2 = performRequest(http.MethodGet, "/doc.json", router)
-	assert.Equal(t, 200, w2.Code)
+	w2 := performRequest(http.MethodGet, "/doc.json", router)
+	assert.Equal(t, http.StatusOK, w2.Code)
+	assert.Equal(t, w2.Header()["Content-Type"][0], "application/json; charset=utf-8")
 
 	w3 := performRequest(http.MethodGet, "/favicon-16x16.png", router)
-	assert.Equal(t, 200, w3.Code)
+	assert.Equal(t, http.StatusOK, w3.Code)
 	assert.Equal(t, w3.Header()["Content-Type"][0], "image/png")
 
 	w4 := performRequest(http.MethodGet, "/swagger-ui.css", router)
-	assert.Equal(t, 200, w4.Code)
+	assert.Equal(t, http.StatusOK, w4.Code)
 	assert.Equal(t, w4.Header()["Content-Type"][0], "text/css; charset=utf-8")
 
 	w5 := performRequest(http.MethodGet, "/swagger-ui-bundle.js", router)
-	assert.Equal(t, 200, w5.Code)
+	assert.Equal(t, http.StatusOK, w5.Code)
 	assert.Equal(t, w5.Header()["Content-Type"][0], "application/javascript")
 
-	w6 := performRequest(http.MethodGet, "/notfound", router)
-	assert.Equal(t, 404, w6.Code)
+	assert.Equal(t, http.StatusNotFound, performRequest(http.MethodGet, "/notfound", router).Code)
 
-	w7 := performRequest(http.MethodGet, "/", router)
-	assert.Equal(t, 301, w7.Code)
+	assert.Equal(t, http.StatusMovedPermanently, performRequest(http.MethodGet, "/", router).Code)
+
+	assert.Equal(t, http.StatusMethodNotAllowed, performRequest(http.MethodPost, "/index.html", router).Code)
+
+	assert.Equal(t, http.StatusMethodNotAllowed, performRequest(http.MethodPut, "/index.html", router).Code)
+
 }
 
 func TestHandlerReuse(t *testing.T) {
@@ -274,19 +277,19 @@ func TestHandlerReuse(t *testing.T) {
 	router.GET("/admin/swagger/*", EchoWrapHandler())
 
 	w1 := performRequest(http.MethodGet, "/swagger/index.html", router)
-	assert.Equal(t, 200, w1.Code)
+	assert.Equal(t, http.StatusOK, w1.Code)
 	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
 	w2 := performRequest(http.MethodGet, "/admin/swagger/index.html", router)
-	assert.Equal(t, 200, w2.Code)
+	assert.Equal(t, http.StatusOK, w2.Code)
 	assert.Equal(t, w2.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
 	w3 := performRequest(http.MethodGet, "/swagger/index.html", router)
-	assert.Equal(t, 200, w3.Code)
+	assert.Equal(t, http.StatusOK, w3.Code)
 	assert.Equal(t, w3.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
 	w4 := performRequest(http.MethodGet, "/admin/swagger/index.html", router)
-	assert.Equal(t, 200, w4.Code)
+	assert.Equal(t, http.StatusOK, w4.Code)
 	assert.Equal(t, w4.Header()["Content-Type"][0], "text/html; charset=utf-8")
 }
 
