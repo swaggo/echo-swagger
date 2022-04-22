@@ -17,77 +17,88 @@ import (
 type Config struct {
 	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
 	URL                  string
-	DeepLinking          bool
 	DocExpansion         string
 	DomID                string
 	InstanceName         string
+	DeepLinking          bool
 	PersistAuthorization bool
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
-func URL(url string) func(c *Config) {
+func URL(url string) func(*Config) {
 	return func(c *Config) {
 		c.URL = url
 	}
 }
 
 // DeepLinking true, false.
-func DeepLinking(deepLinking bool) func(c *Config) {
+func DeepLinking(deepLinking bool) func(*Config) {
 	return func(c *Config) {
 		c.DeepLinking = deepLinking
 	}
 }
 
 // DocExpansion list, full, none.
-func DocExpansion(docExpansion string) func(c *Config) {
+func DocExpansion(docExpansion string) func(*Config) {
 	return func(c *Config) {
 		c.DocExpansion = docExpansion
 	}
 }
 
 // DomID #swagger-ui.
-func DomID(domID string) func(c *Config) {
+func DomID(domID string) func(*Config) {
 	return func(c *Config) {
 		c.DomID = domID
 	}
 }
 
-// InstanceName specified swag instance name
-func InstanceName(instanceName string) func(c *Config) {
+// InstanceName specified swag instance name.
+func InstanceName(instanceName string) func(*Config) {
 	return func(c *Config) {
 		c.InstanceName = instanceName
 	}
 }
 
-// If set to true, it persists authorization data and it would not be lost on browser close/refresh
-// Defaults to false
-func PersistAuthorization(persistAuthorization bool) func(c *Config) {
+// PersistAuthorization Persist authorization information over browser close/refresh.
+// Defaults to false.
+func PersistAuthorization(persistAuthorization bool) func(*Config) {
 	return func(c *Config) {
 		c.PersistAuthorization = persistAuthorization
 	}
+}
+
+func newConfig(configFns ...func(*Config)) *Config {
+	config := Config{
+		URL:                  "doc.json",
+		DocExpansion:         "list",
+		DomID:                "swagger-ui",
+		InstanceName:         "swagger",
+		DeepLinking:          true,
+		PersistAuthorization: false,
+	}
+
+	for _, fn := range configFns {
+		fn(&config)
+	}
+
+	if config.InstanceName == "" {
+		config.InstanceName = swag.Name
+	}
+
+	return &config
 }
 
 // WrapHandler wraps swaggerFiles.Handler and returns echo.HandlerFunc
 var WrapHandler = EchoWrapHandler()
 
 // EchoWrapHandler wraps `http.Handler` into `echo.HandlerFunc`.
-func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
+func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 	var once sync.Once
 
-	config := &Config{
-		URL:          "doc.json",
-		DeepLinking:  true,
-		DocExpansion: "list",
-		DomID:        "#swagger-ui",
-	}
-
-	for _, configFn := range configFns {
-		configFn(config)
-	}
+	config := newConfig(options...)
 
 	// create a template with name
-	t := template.New("swagger_index.html")
-	index, _ := t.Parse(indexTemplate)
+	index, _ := template.New("swagger_index.html").Parse(indexTemplate)
 
 	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
 
@@ -129,7 +140,7 @@ func EchoWrapHandler(configFns ...func(c *Config)) echo.HandlerFunc {
 
 		switch path {
 		case "":
-			c.Redirect(http.StatusMovedPermanently, h.Prefix+"index.html")
+			_ = c.Redirect(http.StatusMovedPermanently, h.Prefix+"index.html")
 		case "index.html":
 			_ = index.Execute(c.Response().Writer, config)
 		case "doc.json":

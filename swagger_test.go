@@ -1,6 +1,7 @@
 package echoSwagger
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -243,10 +244,16 @@ func TestWrapHandler(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
 
-	swag.Register(swag.Name, &mockedSwag{})
+	doc := &mockedSwag{}
+	swag.Register(swag.Name, doc)
 	w2 := performRequest(http.MethodGet, "/doc.json", router)
 	assert.Equal(t, http.StatusOK, w2.Code)
 	assert.Equal(t, w2.Header()["Content-Type"][0], "application/json; charset=utf-8")
+
+	// Perform body rendering validation
+	w2Body, err := ioutil.ReadAll(w2.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, doc.ReadDoc(), string(w2Body))
 
 	w3 := performRequest(http.MethodGet, "/favicon-16x16.png", router)
 	assert.Equal(t, http.StatusOK, w3.Code)
@@ -323,49 +330,47 @@ func performRequest(method, target string, e http.Handler) *httptest.ResponseRec
 }
 
 func TestURL(t *testing.T) {
+	var cfg Config
 	expected := "https://github.com/swaggo/http-swagger"
-	cfg := Config{}
-	configFunc := URL(expected)
-	configFunc(&cfg)
+	URL(expected)(&cfg)
 	assert.Equal(t, expected, cfg.URL)
 }
 
 func TestDeepLinking(t *testing.T) {
+	var cfg Config
 	expected := true
-	cfg := Config{}
-	configFunc := DeepLinking(expected)
-	configFunc(&cfg)
+	DeepLinking(expected)(&cfg)
 	assert.Equal(t, expected, cfg.DeepLinking)
 }
 
 func TestDocExpansion(t *testing.T) {
+	var cfg Config
 	expected := "https://github.com/swaggo/docs"
-	cfg := Config{}
-	configFunc := DocExpansion(expected)
-	configFunc(&cfg)
+	DocExpansion(expected)(&cfg)
 	assert.Equal(t, expected, cfg.DocExpansion)
 }
 
 func TestDomID(t *testing.T) {
+	var cfg Config
 	expected := "#swagger-ui"
-	cfg := Config{}
-	configFunc := DomID(expected)
-	configFunc(&cfg)
+	DomID(expected)(&cfg)
 	assert.Equal(t, expected, cfg.DomID)
 }
 
 func TestInstanceName(t *testing.T) {
+	var cfg Config
+
 	expected := "custom-instance-name"
-	cfg := Config{}
-	configFunc := InstanceName(expected)
-	configFunc(&cfg)
+	InstanceName(expected)(&cfg)
 	assert.Equal(t, expected, cfg.InstanceName)
+
+	newCfg := newConfig(InstanceName(""))
+	assert.Equal(t, swag.Name, newCfg.InstanceName)
 }
 
 func TestPersistAuthorization(t *testing.T) {
+	var cfg Config
 	expected := true
-	cfg := Config{}
-	configFunc := PersistAuthorization(expected)
-	configFunc(&cfg)
+	PersistAuthorization(expected)(&cfg)
 	assert.Equal(t, expected, cfg.PersistAuthorization)
 }
