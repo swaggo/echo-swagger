@@ -227,7 +227,7 @@ const indexTemplate = `<!-- HTML for static distribution bundle build -->
   </defs>
 </svg>
 
-<div id="swagger-ui"></div>
+<div id="{{.DomID}}"></div>
 
 <script src="./swagger-ui-bundle.js"> </script>
 <script src="./swagger-ui-standalone-preset.js"> </script>
@@ -239,7 +239,7 @@ window.onload = function() {
     deepLinking: {{.DeepLinking}},
     docExpansion: "{{.DocExpansion}}",
     persistAuthorization: {{.PersistAuthorization}},
-    dom_id: "{{.DomID}}",
+    dom_id: "#{{.DomID}}",
     validatorUrl: null,
     presets: [
       SwaggerUIBundle.presets.apis,
