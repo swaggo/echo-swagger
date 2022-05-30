@@ -236,7 +236,7 @@ func (s *mockedSwag) ReadDoc() string {
 func TestWrapHandler(t *testing.T) {
 	router := echo.New()
 
-	router.Any("/*", EchoWrapHandler(DocExpansion("none"), DomID("#swagger-ui")))
+	router.Any("/*", EchoWrapHandler(DocExpansion("none"), DomID("swagger-ui")))
 
 	w1 := performRequest(http.MethodGet, "/index.html", router)
 	assert.Equal(t, http.StatusOK, w1.Code)
@@ -275,6 +275,37 @@ func TestWrapHandler(t *testing.T) {
 
 	assert.Equal(t, http.StatusMethodNotAllowed, performRequest(http.MethodPut, "/index.html", router).Code)
 
+}
+
+func TestConfig(t *testing.T) {
+	router := echo.New()
+
+	swaggerHandler := URL("swagger.json")
+	router.Any("/*", EchoWrapHandler(swaggerHandler))
+
+	w := performRequest("GET", "/index.html", router)
+	assert.Equal(t, 200, w.Code)
+	assert.Contains(t, w.Body.String(), `url: "swagger.json"`)
+}
+
+func TestConfigWithOAuth(t *testing.T) {
+	router := echo.New()
+
+	swaggerHandler := EchoWrapHandler(OAuth(&OAuthConfig{
+		ClientId: "my-client-id",
+		Realm:    "my-realm",
+		AppName:  "My App Name",
+	}))
+	router.GET("/*", swaggerHandler)
+
+	w := performRequest("GET", "/index.html", router)
+	assert.Equal(t, 200, w.Code)
+	body := w.Body.String()
+	assert.Contains(t, body, `ui.initOAuth({
+    clientId: "my-client-id",
+    realm: "my-realm",
+    appName: "My App Name"
+  })`)
 }
 
 func TestHandlerReuse(t *testing.T) {
@@ -352,7 +383,7 @@ func TestDocExpansion(t *testing.T) {
 
 func TestDomID(t *testing.T) {
 	var cfg Config
-	expected := "#swagger-ui"
+	expected := "swagger-ui"
 	DomID(expected)(&cfg)
 	assert.Equal(t, expected, cfg.DomID)
 }
@@ -373,4 +404,24 @@ func TestPersistAuthorization(t *testing.T) {
 	expected := true
 	PersistAuthorization(expected)(&cfg)
 	assert.Equal(t, expected, cfg.PersistAuthorization)
+}
+
+func TestOAuth(t *testing.T) {
+	var cfg Config
+	expected := OAuthConfig{
+		ClientId: "my-client-id",
+		Realm:    "my-realm",
+		AppName:  "My App Name",
+	}
+	OAuth(&expected)(&cfg)
+	assert.Equal(t, expected.ClientId, cfg.OAuth.ClientId)
+	assert.Equal(t, expected.Realm, cfg.OAuth.Realm)
+	assert.Equal(t, expected.AppName, cfg.OAuth.AppName)
+}
+
+func TestOAuthNil(t *testing.T) {
+	var cfg Config
+	var expected *OAuthConfig
+	OAuth(expected)(&cfg)
+	assert.Equal(t, expected, cfg.OAuth)
 }

@@ -22,6 +22,22 @@ type Config struct {
 	InstanceName         string
 	DeepLinking          bool
 	PersistAuthorization bool
+
+	// The information for OAuth2 integration, if any.
+	OAuth *OAuthConfig
+}
+
+// OAuthConfig stores configuration for Swagger UI OAuth2 integration. See
+// https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/ for further details.
+type OAuthConfig struct {
+	// The ID of the client sent to the OAuth2 IAM provider.
+	ClientId string
+
+	// The OAuth2 realm that the client should operate in. If not applicable, use empty string.
+	Realm string
+
+	// The name to display for the application in the authentication popup.
+	AppName string
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -64,6 +80,12 @@ func InstanceName(instanceName string) func(*Config) {
 func PersistAuthorization(persistAuthorization bool) func(*Config) {
 	return func(c *Config) {
 		c.PersistAuthorization = persistAuthorization
+	}
+}
+
+func OAuth(config *OAuthConfig) func(*Config) {
+	return func(c *Config) {
+		c.OAuth = config
 	}
 }
 
@@ -250,6 +272,15 @@ window.onload = function() {
     ],
     layout: "StandaloneLayout"
   })
+
+  {{if .OAuth}}
+  ui.initOAuth({
+    clientId: "{{.OAuth.ClientId}}",
+    realm: "{{.OAuth.Realm}}",
+    appName: "{{.OAuth.AppName}}"
+  })
+  {{end}}
+
   window.ui = ui
 }
 </script>
