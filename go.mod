@@ -1,18 +1,15 @@
 module github.com/swaggo/echo-swagger
 
-require (
-	github.com/go-openapi/jsonreference v0.19.3 // indirect
-	github.com/go-openapi/spec v0.19.4 // indirect
-	github.com/labstack/echo/v4 v4.0.0
-	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/mattn/go-colorable v0.1.0 // indirect
-	github.com/stretchr/testify v1.3.0
-	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
-	github.com/swaggo/gin-swagger v1.2.0
-	github.com/swaggo/swag v1.6.3
-	golang.org/x/net v0.0.0-20191204025024-5ee1b9f4859a // indirect
-	golang.org/x/tools v0.0.0-20191205060818-73c7173a9f7d // indirect
-	gopkg.in/yaml.v2 v2.2.7 // indirect
-)
+go 1.15
 
-go 1.13
+require (
+	github.com/labstack/echo/v4 v4.7.2
+	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/stretchr/testify v1.7.0
+	github.com/swaggo/files v0.0.0-20210815190702-a29dd2bc99b2
+	github.com/swaggo/swag v1.8.1
+	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4
+	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
+	golang.org/x/tools v0.1.10 // indirect
+)

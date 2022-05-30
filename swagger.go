@@ -1,26 +1,33 @@
 package echoSwagger
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/swaggo/files"
-	"github.com/swaggo/swag"
 	"html/template"
-	"log"
 	"net/http"
-	"path"
+	"path/filepath"
+	"regexp"
+	"sync"
+
+	"github.com/labstack/echo/v4"
+	swaggerFiles "github.com/swaggo/files"
+	"github.com/swaggo/swag"
+	"golang.org/x/net/webdav"
 )
 
 // Config stores echoSwagger configuration variables.
 type Config struct {
-	// If the Swagger specification JSON document is external to the web server, this should be set to the full URL
-	// to the specification document.
-	ExternalURL *string
+	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
+	URL                  string
+	DocExpansion         string
+	DomID                string
+	InstanceName         string
+	DeepLinking          bool
+	PersistAuthorization bool
 
 	// The information for OAuth2 integration, if any.
 	OAuth *OAuthConfig
 }
 
-// Configuration for Swagger UI OAuth2 integration. See
+// OAuthConfig stores configuration for Swagger UI OAuth2 integration. See
 // https://swagger.io/docs/open-source-tools/swagger-ui/usage/oauth2/ for further details.
 type OAuthConfig struct {
 	// The ID of the client sent to the OAuth2 IAM provider.
@@ -33,78 +40,149 @@ type OAuthConfig struct {
 	AppName string
 }
 
-type templateData struct {
-	SwaggerSpecFullURL string
-	Config
+// URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
+func URL(url string) func(*Config) {
+	return func(c *Config) {
+		c.URL = url
+	}
 }
 
-// URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
-func URL(url string) func(c *Config) {
+// DeepLinking true, false.
+func DeepLinking(deepLinking bool) func(*Config) {
 	return func(c *Config) {
-		c.ExternalURL = &url
+		c.DeepLinking = deepLinking
 	}
+}
+
+// DocExpansion list, full, none.
+func DocExpansion(docExpansion string) func(*Config) {
+	return func(c *Config) {
+		c.DocExpansion = docExpansion
+	}
+}
+
+// DomID #swagger-ui.
+func DomID(domID string) func(*Config) {
+	return func(c *Config) {
+		c.DomID = domID
+	}
+}
+
+// InstanceName specified swag instance name.
+func InstanceName(instanceName string) func(*Config) {
+	return func(c *Config) {
+		c.InstanceName = instanceName
+	}
+}
+
+// PersistAuthorization Persist authorization information over browser close/refresh.
+// Defaults to false.
+func PersistAuthorization(persistAuthorization bool) func(*Config) {
+	return func(c *Config) {
+		c.PersistAuthorization = persistAuthorization
+	}
+}
+
+func OAuth(config *OAuthConfig) func(*Config) {
+	return func(c *Config) {
+		c.OAuth = config
+	}
+}
+
+func newConfig(configFns ...func(*Config)) *Config {
+	config := Config{
+		URL:                  "doc.json",
+		DocExpansion:         "list",
+		DomID:                "swagger-ui",
+		InstanceName:         "swagger",
+		DeepLinking:          true,
+		PersistAuthorization: false,
+	}
+
+	for _, fn := range configFns {
+		fn(&config)
+	}
+
+	if config.InstanceName == "" {
+		config.InstanceName = swag.Name
+	}
+
+	return &config
 }
 
 // WrapHandler wraps swaggerFiles.Handler and returns echo.HandlerFunc
 var WrapHandler = EchoWrapHandler()
 
 // EchoWrapHandler wraps `http.Handler` into `echo.HandlerFunc`.
-func EchoWrapHandler(confs ...func(c *Config)) echo.HandlerFunc {
+func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
+	var once sync.Once
 
-	handler := swaggerFiles.Handler
-
-	config := &Config{}
-
-	for _, c := range confs {
-		c(config)
-	}
+	config := newConfig(options...)
 
 	// create a template with name
-	t := template.New("swagger_index.html")
-	index, err := t.Parse(indexTempl)
-	if err != nil {
-		log.Fatal("Unable to parse index.html template for echo-swagger:", err)
+	index, _ := template.New("swagger_index.html").Parse(indexTemplate)
+
+	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
+
+	h := webdav.Handler{
+		FileSystem: swaggerFiles.FS,
+		LockSystem: webdav.NewMemLS(),
 	}
 
 	return func(c echo.Context) error {
-		prefix, pathFile := path.Split(c.Request().RequestURI)
-		handler.Prefix = prefix
-
-		templateData := templateData{
-			SwaggerSpecFullURL: path.Join(prefix, "doc.json"),
-			Config:             *config,
+		if c.Request().Method != http.MethodGet {
+			return echo.NewHTTPError(http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed))
 		}
 
-		if config.ExternalURL != nil {
-			// Configuration specifies override for Swagger specification URL.
-			templateData.SwaggerSpecFullURL = *config.ExternalURL
+		matches := re.FindStringSubmatch(c.Request().RequestURI)
+		path := matches[2]
+
+		once.Do(func() {
+			h.Prefix = matches[1]
+		})
+
+		switch filepath.Ext(path) {
+		case ".html":
+			c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+		case ".css":
+			c.Response().Header().Set("Content-Type", "text/css; charset=utf-8")
+		case ".js":
+			c.Response().Header().Set("Content-Type", "application/javascript")
+		case ".json":
+			c.Response().Header().Set("Content-Type", "application/json; charset=utf-8")
+		case ".png":
+			c.Response().Header().Set("Content-Type", "image/png")
 		}
 
-		switch pathFile {
+		response := c.Response()
+		// This check fixes an error introduced here: https://github.com/labstack/echo/blob/8da8e161380fd926d4341721f0328f1e94d6d0a2/response.go#L86-L88
+		if _, ok := response.Writer.(http.Flusher); ok {
+			defer response.Flush()
+		}
+
+		switch path {
 		case "":
-			fallthrough
+			_ = c.Redirect(http.StatusMovedPermanently, h.Prefix+"index.html")
 		case "index.html":
-			if err := index.Execute(c.Response().Writer, templateData); err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err)
-			}
+			_ = index.Execute(c.Response().Writer, config)
 		case "doc.json":
-			doc, err := swag.ReadDoc()
+			doc, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err)
+				c.Error(err)
+
+				return nil
 			}
-			c.Response().Header().Set("Content-Type", "application/json")
-			if _, err := c.Response().Write([]byte(doc)); err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err)
-			}
+
+			_, _ = c.Response().Writer.Write([]byte(doc))
 		default:
-			handler.ServeHTTP(c.Response().Writer, c.Request())
+			h.ServeHTTP(c.Response().Writer, c.Request())
 		}
 
 		return nil
 	}
 }
 
-const indexTempl = `<!-- HTML for static distribution bundle build -->
+const indexTemplate = `<!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -171,7 +249,7 @@ const indexTempl = `<!-- HTML for static distribution bundle build -->
   </defs>
 </svg>
 
-<div id="swagger-ui"></div>
+<div id="{{.DomID}}"></div>
 
 <script src="./swagger-ui-bundle.js"> </script>
 <script src="./swagger-ui-standalone-preset.js"> </script>
@@ -179,8 +257,11 @@ const indexTempl = `<!-- HTML for static distribution bundle build -->
 window.onload = function() {
   // Build a system
   const ui = SwaggerUIBundle({
-    url: "{{.SwaggerSpecFullURL}}",
-    dom_id: '#swagger-ui',
+    url: "{{.URL}}",
+    deepLinking: {{.DeepLinking}},
+    docExpansion: "{{.DocExpansion}}",
+    persistAuthorization: {{.PersistAuthorization}},
+    dom_id: "#{{.DomID}}",
     validatorUrl: null,
     presets: [
       SwaggerUIBundle.presets.apis,
