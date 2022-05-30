@@ -423,5 +423,5 @@ func TestOAuthNil(t *testing.T) {
 	var cfg Config
 	var expected *OAuthConfig
 	OAuth(expected)(&cfg)
-	assert.Equal(t, expected, nil)
+	assert.Equal(t, expected, cfg.OAuth)
 }
