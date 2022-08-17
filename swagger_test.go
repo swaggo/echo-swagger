@@ -374,6 +374,13 @@ func TestDeepLinking(t *testing.T) {
 	assert.Equal(t, expected, cfg.DeepLinking)
 }
 
+func TestSyntaxHighlight(t *testing.T) {
+	var cfg Config
+	expected := true
+	SyntaxHighlight(expected)(&cfg)
+	assert.Equal(t, expected, cfg.SyntaxHighlight)
+}
+
 func TestDocExpansion(t *testing.T) {
 	var cfg Config
 	expected := "https://github.com/swaggo/docs"

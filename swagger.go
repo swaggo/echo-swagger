@@ -22,6 +22,7 @@ type Config struct {
 	InstanceName         string
 	DeepLinking          bool
 	PersistAuthorization bool
+	SyntaxHighlight      bool
 
 	// The information for OAuth2 integration, if any.
 	OAuth *OAuthConfig
@@ -51,6 +52,13 @@ func URL(url string) func(*Config) {
 func DeepLinking(deepLinking bool) func(*Config) {
 	return func(c *Config) {
 		c.DeepLinking = deepLinking
+	}
+}
+
+// SyntaxHighlight true, false.
+func SyntaxHighlight(syntaxHighlight bool) func(*Config) {
+	return func(c *Config) {
+		c.SyntaxHighlight = syntaxHighlight
 	}
 }
 
@@ -97,6 +105,7 @@ func newConfig(configFns ...func(*Config)) *Config {
 		InstanceName:         "swagger",
 		DeepLinking:          true,
 		PersistAuthorization: false,
+		SyntaxHighlight:      true,
 	}
 
 	for _, fn := range configFns {
@@ -257,6 +266,7 @@ window.onload = function() {
   // Build a system
   const ui = SwaggerUIBundle({
     url: "{{.URL}}",
+    syntaxHighlight: {{.SyntaxHighlight}},
     deepLinking: {{.DeepLinking}},
     docExpansion: "{{.DocExpansion}}",
     persistAuthorization: {{.PersistAuthorization}},
