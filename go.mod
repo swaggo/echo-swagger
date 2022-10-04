@@ -3,7 +3,7 @@ module github.com/swaggo/echo-swagger
 go 1.15
 
 require (
-	github.com/labstack/echo/v4 v4.7.2
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a
