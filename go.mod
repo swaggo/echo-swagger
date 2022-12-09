@@ -9,5 +9,7 @@ require (
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/swag v1.8.1
 	golang.org/x/crypto v0.2.0 // indirect
-	golang.org/x/net v0.3.0
+	golang.org/x/net v0.2.0
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 )
