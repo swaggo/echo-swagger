@@ -8,6 +8,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/swag v1.8.1
-	golang.org/x/crypto v0.3.0 // indirect
+	golang.org/x/crypto v0.2.0 // indirect
 	golang.org/x/net v0.3.0
 )
