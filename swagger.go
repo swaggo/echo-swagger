@@ -5,12 +5,10 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
-	"sync"
 
 	"github.com/labstack/echo/v4"
-	swaggerFiles "github.com/swaggo/files"
+	swaggerFiles "github.com/swaggo/files/v2"
 	"github.com/swaggo/swag"
-	"golang.org/x/net/webdav"
 )
 
 // Config stores echoSwagger configuration variables.
@@ -124,19 +122,12 @@ var WrapHandler = EchoWrapHandler()
 
 // EchoWrapHandler wraps `http.Handler` into `echo.HandlerFunc`.
 func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
-	var once sync.Once
-
 	config := newConfig(options...)
 
 	// create a template with name
 	index, _ := template.New("swagger_index.html").Parse(indexTemplate)
 
 	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
-
-	h := webdav.Handler{
-		FileSystem: swaggerFiles.FS,
-		LockSystem: webdav.NewMemLS(),
-	}
 
 	return func(c echo.Context) error {
 		if c.Request().Method != http.MethodGet {
@@ -145,10 +136,6 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 
 		matches := re.FindStringSubmatch(c.Request().RequestURI)
 		path := matches[2]
-
-		once.Do(func() {
-			h.Prefix = matches[1]
-		})
 
 		switch filepath.Ext(path) {
 		case ".html":
@@ -171,7 +158,7 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 
 		switch path {
 		case "":
-			_ = c.Redirect(http.StatusMovedPermanently, h.Prefix+"index.html")
+			_ = c.Redirect(http.StatusMovedPermanently, matches[1]+"/"+"index.html")
 		case "index.html":
 			_ = index.Execute(c.Response().Writer, config)
 		case "doc.json":
@@ -183,8 +170,10 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 			}
 
 			_, _ = c.Response().Writer.Write([]byte(doc))
+
 		default:
-			h.ServeHTTP(c.Response().Writer, c.Request())
+			c.Request().URL.Path = matches[2]
+			http.FileServer(http.FS(swaggerFiles.FS)).ServeHTTP(c.Response(), c.Request())
 		}
 
 		return nil
