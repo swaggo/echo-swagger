@@ -14,13 +14,15 @@ import (
 // Config stores echoSwagger configuration variables.
 type Config struct {
 	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
-	URL                  string
-	DocExpansion         string
-	DomID                string
-	InstanceName         string
-	DeepLinking          bool
-	PersistAuthorization bool
-	SyntaxHighlight      bool
+	URL                      string
+	DocExpansion             string
+	DomID                    string
+	InstanceName             string
+	DefaultModelsExpandDepth int
+	DeepLinking              bool
+	PersistAuthorization     bool
+	SyntaxHighlight          bool
+	TryItOutEnabled          bool
 
 	// The information for OAuth2 integration, if any.
 	OAuth *OAuthConfig
@@ -89,6 +91,24 @@ func PersistAuthorization(persistAuthorization bool) func(*Config) {
 	}
 }
 
+// DefaultModelsExpandDepth expansion depth for models (set -1 to
+// completely hide the models).
+// Defaults to 1
+func DefaultModelsExpandDepth(depth int) func(*Config) {
+	return func(c *Config) {
+		c.DefaultModelsExpandDepth = depth
+	}
+}
+
+// TryItOutEnabled controls whether the "Try it out" section should be
+// enabled by default.
+// Defaults to true
+func TryItOutEnabled(enable bool) func(*Config) {
+	return func(c *Config) {
+		c.TryItOutEnabled = enable
+	}
+}
+
 func OAuth(config *OAuthConfig) func(*Config) {
 	return func(c *Config) {
 		c.OAuth = config
@@ -97,13 +117,15 @@ func OAuth(config *OAuthConfig) func(*Config) {
 
 func newConfig(configFns ...func(*Config)) *Config {
 	config := Config{
-		URL:                  "doc.json",
-		DocExpansion:         "list",
-		DomID:                "swagger-ui",
-		InstanceName:         "swagger",
-		DeepLinking:          true,
-		PersistAuthorization: false,
-		SyntaxHighlight:      true,
+		URL:                      "doc.json",
+		DocExpansion:             "list",
+		DomID:                    "swagger-ui",
+		InstanceName:             "swagger",
+		DefaultModelsExpandDepth: 1,
+		DeepLinking:              true,
+		PersistAuthorization:     false,
+		SyntaxHighlight:          true,
+		TryItOutEnabled:          true,
 	}
 
 	for _, fn := range configFns {
@@ -252,6 +274,26 @@ const indexTemplate = `<!-- HTML for static distribution bundle build -->
 <script src="./swagger-ui-standalone-preset.js"> </script>
 <script>
 window.onload = function() {
+  const DisableTryItOutPlugin = function() {
+    return {
+      statePlugins: {
+        spec: {
+          wrapSelectors: {
+            allowTryItOutFor: () => () => false
+          }
+        }
+      }
+    }
+  }
+
+  const plugins = [
+    SwaggerUIBundle.plugins.DownloadUrl
+  ]
+
+  {{if not .TryItOutEnabled}}
+    plugins.push(DisableTryItOutPlugin)
+  {{end}}
+
   // Build a system
   const ui = SwaggerUIBundle({
     url: "{{.URL}}",
@@ -265,10 +307,9 @@ window.onload = function() {
       SwaggerUIBundle.presets.apis,
       SwaggerUIStandalonePreset
     ],
-    plugins: [
-      SwaggerUIBundle.plugins.DownloadUrl
-    ],
-    layout: "StandaloneLayout"
+    plugins: plugins,
+    layout: "StandaloneLayout",
+    defaultModelsExpandDepth: {{.DefaultModelsExpandDepth}},
   })
 
   {{if .OAuth}}
