@@ -364,7 +364,7 @@ func TestURL(t *testing.T) {
 	var cfg Config
 	expected := "https://github.com/swaggo/http-swagger"
 	URL(expected)(&cfg)
-	assert.Equal(t, expected, cfg.URL)
+	assert.Equal(t, expected, cfg.URLs[0])
 }
 
 func TestDeepLinking(t *testing.T) {

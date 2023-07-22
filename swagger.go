@@ -15,7 +15,7 @@ import (
 // Config stores echoSwagger configuration variables.
 type Config struct {
 	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
-	URL                  string
+	URLs                 []string
 	DocExpansion         string
 	DomID                string
 	InstanceName         string
@@ -43,7 +43,7 @@ type OAuthConfig struct {
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
 func URL(url string) func(*Config) {
 	return func(c *Config) {
-		c.URL = url
+		c.URLs = append(c.URLs, url)
 	}
 }
 
@@ -98,7 +98,7 @@ func OAuth(config *OAuthConfig) func(*Config) {
 
 func newConfig(configFns ...func(*Config)) *Config {
 	config := Config{
-		URL:                  "doc.json",
+		URLs:                 []string{"doc.json", "doc.yaml"},
 		DocExpansion:         "list",
 		DomID:                "swagger-ui",
 		InstanceName:         "swagger",
@@ -270,7 +270,14 @@ const indexTemplate = `<!-- HTML for static distribution bundle build -->
 window.onload = function() {
   // Build a system
   const ui = SwaggerUIBundle({
-    url: "{{.URL}}",
+	urls: [
+	{{range $index, $url := .URLs}}
+		{
+			name: "{{$url}}",
+			url: "{{$url}}",
+		},
+	{{end}}
+	],
     syntaxHighlight: {{.SyntaxHighlight}},
     deepLinking: {{.DeepLinking}},
     docExpansion: "{{.DocExpansion}}",
