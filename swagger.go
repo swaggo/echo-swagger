@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/ghodss/yaml"
 	"github.com/labstack/echo/v4"
 	swaggerFiles "github.com/swaggo/files/v2"
 	"github.com/swaggo/swag"
@@ -14,7 +15,7 @@ import (
 // Config stores echoSwagger configuration variables.
 type Config struct {
 	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
-	URL                  string
+	URLs                 []string
 	DocExpansion         string
 	DomID                string
 	InstanceName         string
@@ -42,7 +43,7 @@ type OAuthConfig struct {
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
 func URL(url string) func(*Config) {
 	return func(c *Config) {
-		c.URL = url
+		c.URLs = append(c.URLs, url)
 	}
 }
 
@@ -97,7 +98,7 @@ func OAuth(config *OAuthConfig) func(*Config) {
 
 func newConfig(configFns ...func(*Config)) *Config {
 	config := Config{
-		URL:                  "doc.json",
+		URLs:                 []string{"doc.json", "doc.yaml"},
 		DocExpansion:         "list",
 		DomID:                "swagger-ui",
 		InstanceName:         "swagger",
@@ -146,6 +147,8 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 			c.Response().Header().Set("Content-Type", "application/javascript")
 		case ".json":
 			c.Response().Header().Set("Content-Type", "application/json; charset=utf-8")
+		case ".yaml":
+			c.Response().Header().Set("Content-Type", "text/plain; charset=utf-8")
 		case ".png":
 			c.Response().Header().Set("Content-Type", "image/png")
 		}
@@ -170,7 +173,20 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 			}
 
 			_, _ = c.Response().Writer.Write([]byte(doc))
+		case "doc.yaml":
+			jsonString, err := swag.ReadDoc(config.InstanceName)
+			if err != nil {
+				c.Error(err)
 
+				return nil
+			}
+			doc, err := yaml.JSONToYAML([]byte(jsonString))
+			if err != nil {
+				c.Error(err)
+
+				return nil
+			}
+			_, _ = c.Response().Writer.Write(doc)
 		default:
 			c.Request().URL.Path = matches[2]
 			http.FileServer(http.FS(swaggerFiles.FS)).ServeHTTP(c.Response(), c.Request())
@@ -254,7 +270,14 @@ const indexTemplate = `<!-- HTML for static distribution bundle build -->
 window.onload = function() {
   // Build a system
   const ui = SwaggerUIBundle({
-    url: "{{.URL}}",
+	urls: [
+	{{range $index, $url := .URLs}}
+		{
+			name: "{{$url}}",
+			url: "{{$url}}",
+		},
+	{{end}}
+	],
     syntaxHighlight: {{.SyntaxHighlight}},
     deepLinking: {{.DeepLinking}},
     docExpansion: "{{.DocExpansion}}",
