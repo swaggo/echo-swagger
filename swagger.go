@@ -38,6 +38,9 @@ type OAuthConfig struct {
 
 	// The name to display for the application in the authentication popup.
 	AppName string
+
+	// Use the Proof Key for Code Exchange extension to the authorization code flow
+	UsePkce bool
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -298,7 +301,8 @@ window.onload = function() {
   ui.initOAuth({
     clientId: "{{.OAuth.ClientId}}",
     realm: "{{.OAuth.Realm}}",
-    appName: "{{.OAuth.AppName}}"
+    appName: "{{.OAuth.AppName}}",
+    usePkceWithAuthorizationCodeGrant: {{.OAuth.UsePkce}}
   })
   {{end}}
 
