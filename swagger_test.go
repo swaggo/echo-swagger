@@ -308,6 +308,34 @@ func TestConfigWithOAuth(t *testing.T) {
   })`)
 }
 
+func TestConfigWithDefaultModelsExpandDepth(t *testing.T) {
+	router := echo.New()
+
+	swaggerHandler := EchoWrapHandler(
+		DefaultModelsExpandDepth(-1),
+	)
+	router.GET("/*", swaggerHandler)
+
+	w := performRequest("GET", "/index.html", router)
+	assert.Equal(t, 200, w.Code)
+	body := w.Body.String()
+	assert.Contains(t, body, `defaultModelsExpandDepth:  -1`)
+}
+
+func TestConfigWithTryItOutEnabled(t *testing.T) {
+	router := echo.New()
+
+	swaggerHandler := EchoWrapHandler(
+		TryItOutEnabled(false),
+	)
+	router.GET("/*", swaggerHandler)
+
+	w := performRequest("GET", "/index.html", router)
+	assert.Equal(t, 200, w.Code)
+	body := w.Body.String()
+	assert.Contains(t, body, `plugins.push(DisableTryItOutPlugin)`)
+}
+
 func TestHandlerReuse(t *testing.T) {
 	router := echo.New()
 
@@ -431,4 +459,18 @@ func TestOAuthNil(t *testing.T) {
 	var expected *OAuthConfig
 	OAuth(expected)(&cfg)
 	assert.Equal(t, expected, cfg.OAuth)
+}
+
+func TestDefaultModelsExpandDepth(t *testing.T) {
+	var cfg Config
+	expected := 1
+	DefaultModelsExpandDepth(expected)(&cfg)
+	assert.Equal(t, expected, cfg.DefaultModelsExpandDepth)
+}
+
+func TestTryItOutEnabled(t *testing.T) {
+	var cfg Config
+	expected := false
+	TryItOutEnabled(expected)(&cfg)
+	assert.Equal(t, expected, cfg.TryItOutEnabled)
 }
