@@ -24,6 +24,7 @@ func main() {
 	e := echo.New()
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
+	e.GET("/swagger/redocly/*", echoSwagger.EchoWrapHandler(echoSwagger.ThemeName("redocly")))
 
 	/*
 		Or can use EchoWrapHandler func with configurations.
