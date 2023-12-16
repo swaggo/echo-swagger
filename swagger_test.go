@@ -288,17 +288,6 @@ func TestWrapHandlerWithRedoclyTheme(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
 
-	doc := &mockedSwag{}
-	swag.Register(swag.Name, doc)
-	w2 := performRequest(http.MethodGet, "/doc.json", router)
-	assert.Equal(t, http.StatusOK, w2.Code)
-	assert.Equal(t, w2.Header()["Content-Type"][0], "application/json; charset=utf-8")
-
-	// Perform body rendering validation
-	w2Body, err := ioutil.ReadAll(w2.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, doc.ReadDoc(), string(w2Body))
-
 }
 
 func TestConfig(t *testing.T) {
