@@ -3,6 +3,7 @@ package echoSwagger
 import (
 	"html/template"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"regexp"
 
@@ -188,7 +189,13 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 			}
 			_, _ = c.Response().Writer.Write(doc)
 		default:
-			c.Request().URL.Path = matches[2]
+			parsedUrl, err := url.Parse(matches[2])
+			if err != nil {
+				c.Error(err)
+
+				return nil
+			}
+			c.Request().URL = parsedUrl
 			http.FileServer(http.FS(swaggerFiles.FS)).ServeHTTP(c.Response(), c.Request())
 		}
 
