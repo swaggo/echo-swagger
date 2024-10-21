@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/ghodss/yaml"
 	"github.com/labstack/echo/v4"
 	swaggerFiles "github.com/swaggo/files/v2"
 	"github.com/swaggo/swag"
+	"sigs.k8s.io/yaml"
 )
 
 // Config stores echoSwagger configuration variables.
