@@ -1,7 +1,7 @@
 package echoSwagger
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/swaggo/swag"
+
+	swagV3 "github.com/swaggo/swag/v2"
 )
 
 type mockedSwag struct{}
@@ -251,7 +253,51 @@ func TestWrapHandler(t *testing.T) {
 	assert.Equal(t, w2.Header()["Content-Type"][0], "application/json; charset=utf-8")
 
 	// Perform body rendering validation
-	w2Body, err := ioutil.ReadAll(w2.Body)
+	w2Body, err := io.ReadAll(w2.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, doc.ReadDoc(), string(w2Body))
+
+	w3 := performRequest(http.MethodGet, "/favicon-16x16.png", router)
+	assert.Equal(t, http.StatusOK, w3.Code)
+	assert.Equal(t, w3.Header()["Content-Type"][0], "image/png")
+
+	w4 := performRequest(http.MethodGet, "/swagger-ui.css", router)
+	assert.Equal(t, http.StatusOK, w4.Code)
+	assert.Equal(t, w4.Header()["Content-Type"][0], "text/css; charset=utf-8")
+
+	w5 := performRequest(http.MethodGet, "/swagger-ui-bundle.js", router)
+	assert.Equal(t, http.StatusOK, w5.Code)
+	assert.Equal(t, w5.Header()["Content-Type"][0], "application/javascript")
+
+	assert.Equal(t, http.StatusNotFound, performRequest(http.MethodGet, "/notfound", router).Code)
+
+	assert.Equal(t, http.StatusMovedPermanently, performRequest(http.MethodGet, "/", router).Code)
+
+	assert.Equal(t, http.StatusMethodNotAllowed, performRequest(http.MethodPost, "/index.html", router).Code)
+
+	assert.Equal(t, http.StatusMethodNotAllowed, performRequest(http.MethodPut, "/index.html", router).Code)
+
+}
+
+func TestWrapHandlerV3(t *testing.T) {
+	router := echo.New()
+
+	router.Any("/*", EchoWrapHandlerV3(DocExpansion("none"), DomID("swagger-ui")))
+
+	w1 := performRequest(http.MethodGet, "/index.html", router)
+	assert.Equal(t, http.StatusOK, w1.Code)
+	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
+
+	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
+
+	doc := &mockedSwag{}
+	swagV3.Register(swag.Name, doc)
+	w2 := performRequest(http.MethodGet, "/doc.json", router)
+	assert.Equal(t, http.StatusOK, w2.Code)
+	assert.Equal(t, w2.Header()["Content-Type"][0], "application/json; charset=utf-8")
+
+	// Perform body rendering validation
+	w2Body, err := io.ReadAll(w2.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, doc.ReadDoc(), string(w2Body))
 
@@ -404,6 +450,17 @@ func TestInstanceName(t *testing.T) {
 
 	newCfg := newConfig(InstanceName(""))
 	assert.Equal(t, swag.Name, newCfg.InstanceName)
+}
+
+func TestInstanceNameV3(t *testing.T) {
+	var cfg Config
+
+	expected := "custom-instance-name"
+	InstanceName(expected)(&cfg)
+	assert.Equal(t, expected, cfg.InstanceName)
+
+	newCfg := newConfig(InstanceName(""))
+	assert.Equal(t, swagV3.Name, newCfg.InstanceName)
 }
 
 func TestPersistAuthorization(t *testing.T) {
