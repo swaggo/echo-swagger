@@ -17,7 +17,7 @@ echo middleware to automatically generate RESTful API documentation with Swagger
 ```sh
 $ go get -d github.com/swaggo/swag/cmd/swag
 
-# 1.16 or newer
+# 1.21 or newer
 $ go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
