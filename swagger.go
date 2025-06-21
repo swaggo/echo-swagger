@@ -3,6 +3,7 @@ package echoSwagger
 import (
 	"html/template"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"regexp"
 
@@ -161,7 +162,8 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 
 		switch path {
 		case "":
-			_ = c.Redirect(http.StatusMovedPermanently, matches[1]+"/"+"index.html")
+			urlPath, _ := url.JoinPath(matches[1], "index.html")
+			_ = c.Redirect(http.StatusMovedPermanently, urlPath)
 		case "index.html":
 			_ = index.Execute(c.Response().Writer, config)
 		case "doc.json":
