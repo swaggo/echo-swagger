@@ -1,9 +1,11 @@
 package echoSwagger
 
 import (
+	"errors"
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -173,7 +175,7 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 		case "doc.yaml":
 			jsonString, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
-				return c.NoContent(http.StatusNotFound)
+				return c.String(http.StatusInternalServerError, err.Error())
 			}
 			doc, err := yaml.JSONToYAML([]byte(jsonString))
 			if err != nil {
@@ -184,8 +186,11 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 		c.Request().URL.Path = matches[2]
 
 		f, err := swaggerFiles.FS.Open(matches[2])
-		if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// If the file is not found, return 404
 			return c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+		} else if err != nil {
+			return c.String(http.StatusNotFound, err.Error())
 		}
 		defer f.Close()
 
