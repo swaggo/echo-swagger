@@ -28,6 +28,9 @@ type Config struct {
 
 	// The information for OAuth2 integration, if any.
 	OAuth *OAuthConfig
+
+	// Information abouth theme, default theme is swagger-ui
+	Theme string
 }
 
 // OAuthConfig stores configuration for Swagger UI OAuth2 integration. See
@@ -85,6 +88,13 @@ func InstanceName(instanceName string) func(*Config) {
 	}
 }
 
+// ThemeName specified swag theme name.
+func ThemeName(themeName string) func(*Config) {
+	return func(c *Config) {
+		c.Theme = themeName
+	}
+}
+
 // PersistAuthorization Persist authorization information over browser close/refresh.
 // Defaults to false.
 func PersistAuthorization(persistAuthorization bool) func(*Config) {
@@ -118,6 +128,11 @@ func newConfig(configFns ...func(*Config)) *Config {
 		config.InstanceName = swag.Name
 	}
 
+	// if theme is black set default theme to swagger ui
+	if config.Theme == "" {
+		config.Theme = "swagger-ui"
+	}
+
 	return &config
 }
 
@@ -129,8 +144,19 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 	config := newConfig(options...)
 
 	// create a template with name
-	index, _ := template.New("swagger_index.html").Parse(indexTemplate)
 
+	var index *template.Template
+
+	// create a template with name
+	if config.Theme == "redocly" {
+
+		index, _ = template.New("swagger_index.html").Parse(redoclyIndexTemplate)
+
+	} else {
+
+		index, _ = template.New("swagger_index.html").Parse(indexTemplate)
+
+	}
 	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
 
 	return func(c echo.Context) error {
@@ -307,6 +333,40 @@ window.onload = function() {
   window.ui = ui
 }
 </script>
+</body>
+
+</html>
+`
+
+const redoclyIndexTemplate = `<!-- HTML for static distribution bundle build -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>API Documentation</title>
+    <!-- needed for adaptive design -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+            href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700"
+            rel="stylesheet"
+    />
+
+    <!--
+    Redoc doesn't change outer page styles
+    -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body id="{{.DomID}}">
+
+<redoc spec-url="./doc.json"></redoc>
+<script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+
 </body>
 
 </html>
