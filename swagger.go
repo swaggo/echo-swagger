@@ -22,6 +22,7 @@ type Config struct {
 	DocExpansion         string
 	DomID                string
 	InstanceName         string
+	IndexTemplate        string
 	DeepLinking          bool
 	PersistAuthorization bool
 	SyntaxHighlight      bool
@@ -85,6 +86,13 @@ func InstanceName(instanceName string) func(*Config) {
 	}
 }
 
+// IndexTemplate overrides default index template
+func IndexTemplate(indexTemplate string) func(*Config) {
+	return func(c *Config) {
+		c.IndexTemplate = indexTemplate
+	}
+}
+
 // PersistAuthorization Persist authorization information over browser close/refresh.
 // Defaults to false.
 func PersistAuthorization(persistAuthorization bool) func(*Config) {
@@ -105,6 +113,7 @@ func newConfig(configFns ...func(*Config)) *Config {
 		DocExpansion:         "list",
 		DomID:                "swagger-ui",
 		InstanceName:         "swagger",
+		IndexTemplate:        indexTemplate,
 		DeepLinking:          true,
 		PersistAuthorization: false,
 		SyntaxHighlight:      true,
@@ -129,9 +138,9 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 	config := newConfig(options...)
 
 	// create a template with name
-	index, _ := template.New("swagger_index.html").Parse(indexTemplate)
+	index, _ := template.New("swagger_index.html").Parse(config.IndexTemplate)
 
-	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
+	re := regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
 
 	return func(c echo.Context) error {
 		if c.Request().Method != http.MethodGet {

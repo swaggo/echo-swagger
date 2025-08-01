@@ -274,7 +274,6 @@ func TestWrapHandler(t *testing.T) {
 	assert.Equal(t, http.StatusMethodNotAllowed, performRequest(http.MethodPost, "/index.html", router).Code)
 
 	assert.Equal(t, http.StatusMethodNotAllowed, performRequest(http.MethodPut, "/index.html", router).Code)
-
 }
 
 func TestConfig(t *testing.T) {
@@ -404,6 +403,14 @@ func TestInstanceName(t *testing.T) {
 
 	newCfg := newConfig(InstanceName(""))
 	assert.Equal(t, swag.Name, newCfg.InstanceName)
+}
+
+func TestIndexTemplate(t *testing.T) {
+	var cfg Config
+
+	expected := "custom-index-template"
+	IndexTemplate(expected)(&cfg)
+	assert.Equal(t, expected, cfg.IndexTemplate)
 }
 
 func TestPersistAuthorization(t *testing.T) {
