@@ -304,7 +304,8 @@ func TestConfigWithOAuth(t *testing.T) {
 	assert.Contains(t, body, `ui.initOAuth({
     clientId: "my-client-id",
     realm: "my-realm",
-    appName: "My App Name"
+    appName: "My App Name",
+    usePkceWithAuthorizationCodeGrant:  false 
   })`)
 }
 
@@ -419,11 +420,13 @@ func TestOAuth(t *testing.T) {
 		ClientId: "my-client-id",
 		Realm:    "my-realm",
 		AppName:  "My App Name",
+		UsePkce:  true,
 	}
 	OAuth(&expected)(&cfg)
 	assert.Equal(t, expected.ClientId, cfg.OAuth.ClientId)
 	assert.Equal(t, expected.Realm, cfg.OAuth.Realm)
 	assert.Equal(t, expected.AppName, cfg.OAuth.AppName)
+	assert.Equal(t, expected.UsePkce, cfg.OAuth.UsePkce)
 }
 
 func TestOAuthNil(t *testing.T) {
