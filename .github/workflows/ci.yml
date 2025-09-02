@@ -1,4 +1,4 @@
-vname: build
+name: build
 
 on:
   push:
