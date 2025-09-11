@@ -1,8 +1,11 @@
 package echoSwagger
 
 import (
+	"errors"
 	"html/template"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -136,7 +139,7 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 
 	return func(c echo.Context) error {
 		if c.Request().Method != http.MethodGet {
-			return echo.NewHTTPError(http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed))
+			return c.String(http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed))
 		}
 
 		matches := re.FindStringSubmatch(c.Request().RequestURI)
@@ -157,46 +160,45 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 			c.Response().Header().Set("Content-Type", "image/png")
 		}
 
-		response := c.Response()
-		// This check fixes an error introduced here: https://github.com/labstack/echo/blob/8da8e161380fd926d4341721f0328f1e94d6d0a2/response.go#L86-L88
-		if _, ok := response.Writer.(http.Flusher); ok {
-			defer response.Flush()
-		}
-
 		switch path {
 		case "":
-			_ = c.Redirect(http.StatusMovedPermanently, matches[1]+"/"+"index.html")
+			return c.Redirect(http.StatusMovedPermanently, matches[1]+"/"+"index.html")
 		case "index.html":
-			_ = index.Execute(c.Response().Writer, config)
+			pr, pw := io.Pipe()
+			go func() {
+				defer pw.Close()
+				_ = index.Execute(pw, config)
+			}()
+			return c.Stream(http.StatusOK, "text/html; charset=utf-8", pr)
 		case "doc.json":
 			doc, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
-				c.Error(err)
-
-				return nil
+				return c.String(http.StatusInternalServerError, err.Error())
 			}
-
-			_, _ = c.Response().Writer.Write([]byte(doc))
+			return c.String(http.StatusOK, doc)
 		case "doc.yaml":
 			jsonString, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
-				c.Error(err)
-
-				return nil
+				return c.String(http.StatusInternalServerError, err.Error())
 			}
 			doc, err := yaml.JSONToYAML([]byte(jsonString))
 			if err != nil {
-				c.Error(err)
-
-				return nil
+				return c.String(http.StatusInternalServerError, err.Error())
 			}
-			_, _ = c.Response().Writer.Write(doc)
-		default:
-			c.Request().URL.Path = matches[2]
-			http.FileServer(http.FS(swaggerFiles.FS)).ServeHTTP(c.Response(), c.Request())
+			return c.String(http.StatusOK, string(doc))
 		}
+		c.Request().URL.Path = matches[2]
 
-		return nil
+		f, err := swaggerFiles.FS.Open(matches[2])
+		if errors.Is(err, os.ErrNotExist) {
+			// If the file is not found, return 404
+			return c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+		} else if err != nil {
+			return c.String(http.StatusNotFound, err.Error())
+		}
+		defer f.Close()
+
+		return c.Stream(http.StatusOK, c.Response().Header().Get("Content-Type"), f)
 	}
 }
 
