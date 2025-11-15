@@ -18,17 +18,14 @@ import (
 
 // Config stores echoSwagger configuration variables.
 type Config struct {
-	// The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
-	URLs                 []string
+	OAuth                *OAuthConfig // The information for OAuth2 integration, if any.
 	DocExpansion         string
 	DomID                string
 	InstanceName         string
+	URLs                 []string // The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
 	DeepLinking          bool
 	PersistAuthorization bool
 	SyntaxHighlight      bool
-
-	// The information for OAuth2 integration, if any.
-	OAuth *OAuthConfig
 }
 
 // OAuthConfig stores configuration for Swagger UI OAuth2 integration. See
