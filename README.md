@@ -119,13 +119,13 @@ Note: If you are using Gzip middleware you should add the swagger endpoint to sk
 
 ### Example
 
-```
+```go
 e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
-		Skipper: func(c echo.Context) bool {
-			if strings.Contains(c.Request().URL.Path, "swagger") {
-				return true
-			}
-			return false
-		},
-	}))
+	Skipper: func(c echo.Context) bool {
+		if strings.Contains(c.Request().URL.Path, "swagger") {
+			return true
+		}
+		return false
+	},
+}))
 ```

@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,14 +19,16 @@ import (
 
 // Config stores echoSwagger configuration variables.
 type Config struct {
-	OAuth                *OAuthConfig // The information for OAuth2 integration, if any.
-	DocExpansion         string
-	DomID                string
-	InstanceName         string
-	URLs                 []string // The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
-	DeepLinking          bool
-	PersistAuthorization bool
-	SyntaxHighlight      bool
+	OAuth                    *OAuthConfig // The information for OAuth2 integration, if any.
+	DocExpansion             string
+	DomID                    string
+	InstanceName             string
+	URLs                     []string // The url pointing to API definition (normally swagger.json or swagger.yaml). Default is `mockedSwag.json`.
+	DeepLinking              bool
+	PersistAuthorization     bool
+	SyntaxHighlight          bool
+	TryItOutEnabled          bool
+	DefaultModelsExpandDepth int
 }
 
 // OAuthConfig stores configuration for Swagger UI OAuth2 integration. See
@@ -97,15 +100,35 @@ func OAuth(config *OAuthConfig) func(*Config) {
 	}
 }
 
+// DefaultModelsExpandDepth expansion depth for models (set -1 to
+// completely hide the models).
+// Defaults to 1
+func DefaultModelsExpandDepth(depth int) func(*Config) {
+	return func(c *Config) {
+		c.DefaultModelsExpandDepth = depth
+	}
+}
+
+// TryItOutEnabled controls whether the "Try it out" section should be
+// enabled by default.
+// Defaults to true
+func TryItOutEnabled(enable bool) func(*Config) {
+	return func(c *Config) {
+		c.TryItOutEnabled = enable
+	}
+}
+
 func newConfig(configFns ...func(*Config)) *Config {
 	config := Config{
-		URLs:                 []string{"doc.json", "doc.yaml"},
-		DocExpansion:         "list",
-		DomID:                "swagger-ui",
-		InstanceName:         "swagger",
-		DeepLinking:          true,
-		PersistAuthorization: false,
-		SyntaxHighlight:      true,
+		URLs:                     []string{"doc.json", "doc.yaml"},
+		DocExpansion:             "list",
+		DomID:                    "swagger-ui",
+		InstanceName:             "swagger",
+		DefaultModelsExpandDepth: 1,
+		DeepLinking:              true,
+		PersistAuthorization:     false,
+		SyntaxHighlight:          true,
+		TryItOutEnabled:          true,
 	}
 
 	for _, fn := range configFns {
@@ -159,7 +182,8 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 
 		switch path {
 		case "":
-			return c.Redirect(http.StatusMovedPermanently, matches[1]+"/"+"index.html")
+			urlPath, _ := url.JoinPath(matches[1], "index.html")
+			_ = c.Redirect(http.StatusMovedPermanently, urlPath)
 		case "index.html":
 			pr, pw := io.Pipe()
 			go func() {
@@ -167,13 +191,13 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 				_ = index.Execute(pw, config)
 			}()
 			return c.Stream(http.StatusOK, "text/html; charset=utf-8", pr)
-		case "doc.json":
+		case "doc.json", "swagger.json":
 			doc, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
 				return c.String(http.StatusInternalServerError, err.Error())
 			}
 			return c.String(http.StatusOK, doc)
-		case "doc.yaml":
+		case "doc.yaml", "swagger.yaml":
 			jsonString, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
 				return c.String(http.StatusInternalServerError, err.Error())
@@ -346,6 +370,27 @@ const indexTemplate = `<!-- HTML for static distribution bundle build -->
 <script src="./swagger-ui-standalone-preset.js"> </script>
 <script>
 window.onload = function() {
+
+  const DisableTryItOutPlugin = function() {
+    return {
+      statePlugins: {
+        spec: {
+          wrapSelectors: {
+            allowTryItOutFor: () => () => false
+          }
+        }
+      }
+    }
+  }
+
+  const plugins = [
+    SwaggerUIBundle.plugins.DownloadUrl
+  ]
+
+  {{if not .TryItOutEnabled}}
+    plugins.push(DisableTryItOutPlugin)
+  {{end}}
+
   // Build a system
   const ui = SwaggerUIBundle({
 	urls: [
@@ -366,10 +411,9 @@ window.onload = function() {
       SwaggerUIBundle.presets.apis,
       SwaggerUIStandalonePreset
     ],
-    plugins: [
-      SwaggerUIBundle.plugins.DownloadUrl
-    ],
-    layout: "StandaloneLayout"
+	plugins: plugins,
+    layout: "StandaloneLayout",
+    defaultModelsExpandDepth: {{.DefaultModelsExpandDepth}},
   })
 
   {{if .OAuth}}

@@ -1,0 +1,82 @@
+version: "2"
+run:
+  concurrency: 4
+  go: "1.24"
+  issues-exit-code: 1
+  tests: false
+linters:
+  default: none
+  enable:
+    - asciicheck
+    - bodyclose
+    - containedctx
+    - contextcheck
+    - dupword
+    - errname
+    - goconst
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - predeclared
+    - promlinter
+    - staticcheck
+    - unused
+  settings:
+    gocritic:
+      disabled-checks:
+        - dupImport
+        - ifElseChain
+        - octalLiteral
+        - whyNoLint
+        - wrapperFunc
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    govet:
+      disable:
+        - printf
+      enable-all: true
+      settings:
+        shadow:
+          strict: true
+    lll:
+      line-length: 300
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - path: (.+)\.go$
+        text: internal/mocks/*
+      - linters:
+          - cyclop
+        path: (.+)_test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+output:
+  formats:
+    checkstyle:
+      path: golangci-lint.xml
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true

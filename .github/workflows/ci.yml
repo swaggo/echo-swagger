@@ -13,12 +13,24 @@ jobs:
         go: [ '1.21.x', '1.22.x', '1.23.x', '1.24.x', '1.25.x' ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
-      - name: test
-        run: go test -coverprofile=coverage.txt -covermode=atomic
-      - name: coverage
-        run: bash <(curl -s https://codecov.io/bash)
+
+      - name: Install dependencies
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+          go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest
+
+      - name: Lint
+        run: make lint
+
+      - name: Build
+        run: go build ./...
+
+      - name: Run tests
+        run: |
+          set -euo pipefail
+          go test -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
