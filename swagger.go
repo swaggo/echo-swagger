@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	swaggerFiles "github.com/swaggo/files/v2"
 	"github.com/swaggo/swag"
 	swagV2 "github.com/swaggo/swag/v2"
@@ -137,7 +137,7 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 
 	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
 
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		if c.Request().Method != http.MethodGet {
 			return c.String(http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed))
 		}
@@ -211,7 +211,7 @@ func EchoWrapHandlerV3(options ...func(*Config)) echo.HandlerFunc {
 
 	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
 
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		if c.Request().Method != http.MethodGet {
 			return echo.NewHTTPError(http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed))
 		}
@@ -236,38 +236,32 @@ func EchoWrapHandlerV3(options ...func(*Config)) echo.HandlerFunc {
 
 		response := c.Response()
 		// This check fixes an error introduced here: https://github.com/labstack/echo/blob/8da8e161380fd926d4341721f0328f1e94d6d0a2/response.go#L86-L88
-		if _, ok := response.Writer.(http.Flusher); ok {
-			defer response.Flush()
+		if flusher, ok := response.(http.Flusher); ok {
+			defer flusher.Flush()
 		}
 
 		switch path {
 		case "":
 			_ = c.Redirect(http.StatusMovedPermanently, matches[1]+"/"+"index.html")
 		case "index.html":
-			_ = index.Execute(c.Response().Writer, config)
+			_ = index.Execute(c.Response(), config)
 		case "doc.json":
 			doc, err := swagV2.ReadDoc(config.InstanceName)
 			if err != nil {
-				c.Error(err)
-
-				return nil
+				return c.String(http.StatusInternalServerError, err.Error())
 			}
 
-			_, _ = c.Response().Writer.Write([]byte(doc))
+			_, _ = c.Response().Write([]byte(doc))
 		case "doc.yaml":
 			jsonString, err := swagV2.ReadDoc(config.InstanceName)
 			if err != nil {
-				c.Error(err)
-
-				return nil
+				return c.String(http.StatusInternalServerError, err.Error())
 			}
 			doc, err := yaml.JSONToYAML([]byte(jsonString))
 			if err != nil {
-				c.Error(err)
-
-				return nil
+				return c.String(http.StatusInternalServerError, err.Error())
 			}
-			_, _ = c.Response().Writer.Write(doc)
+			_, _ = c.Response().Write(doc)
 		default:
 			c.Request().URL.Path = matches[2]
 			http.FileServer(http.FS(swaggerFiles.FS)).ServeHTTP(c.Response(), c.Request())
