@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	swaggerFiles "github.com/swaggo/files/v2"
@@ -142,7 +143,12 @@ func EchoWrapHandler(options ...func(*Config)) echo.HandlerFunc {
 			return c.String(http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed))
 		}
 
-		matches := re.FindStringSubmatch(c.Request().RequestURI)
+		requestURI := c.Request().RequestURI
+		if idx := strings.Index(requestURI, "?"); idx != -1 {
+			requestURI = requestURI[:idx]
+		}
+
+		matches := re.FindStringSubmatch(requestURI)
 		path := matches[2]
 
 		switch filepath.Ext(path) {
@@ -216,7 +222,12 @@ func EchoWrapHandlerV3(options ...func(*Config)) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed))
 		}
 
-		matches := re.FindStringSubmatch(c.Request().RequestURI)
+		requestURI := c.Request().RequestURI
+		if idx := strings.Index(requestURI, "?"); idx != -1 {
+			requestURI = requestURI[:idx]
+		}
+
+		matches := re.FindStringSubmatch(requestURI)
 		path := matches[2]
 
 		switch filepath.Ext(path) {
@@ -372,7 +383,14 @@ window.onload = function() {
     plugins: [
       SwaggerUIBundle.plugins.DownloadUrl
     ],
-    layout: "StandaloneLayout"
+    layout: "StandaloneLayout",
+    requestInterceptor: (req) => {
+      if (req.headers) {
+        delete req.headers["X-Requested-With"]
+        delete req.headers["x-requested-with"]
+      }
+      return req
+    }
   })
 
   {{if .OAuth}}

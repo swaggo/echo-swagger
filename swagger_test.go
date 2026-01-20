@@ -243,6 +243,9 @@ func TestWrapHandler(t *testing.T) {
 	w1 := performRequest(http.MethodGet, "/index.html", router)
 	assert.Equal(t, http.StatusOK, w1.Code)
 	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
+	body, err := io.ReadAll(w1.Body)
+	assert.NoError(t, err)
+	assert.Contains(t, string(body), "requestInterceptor")
 
 	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
 
@@ -279,6 +282,16 @@ func TestWrapHandler(t *testing.T) {
 
 }
 
+func TestWrapHandlerOAuthRedirect(t *testing.T) {
+	router := echo.New()
+
+	router.Any("/*", EchoWrapHandler())
+
+	w := performRequest(http.MethodGet, "/oauth2-redirect.html?code=abc123&state=xyz", router)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
+}
+
 func TestWrapHandlerV3(t *testing.T) {
 	router := echo.New()
 
@@ -287,6 +300,9 @@ func TestWrapHandlerV3(t *testing.T) {
 	w1 := performRequest(http.MethodGet, "/index.html", router)
 	assert.Equal(t, http.StatusOK, w1.Code)
 	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
+	body, err := io.ReadAll(w1.Body)
+	assert.NoError(t, err)
+	assert.Contains(t, string(body), "requestInterceptor")
 
 	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
 
@@ -321,6 +337,16 @@ func TestWrapHandlerV3(t *testing.T) {
 
 	assert.Equal(t, http.StatusMethodNotAllowed, performRequest(http.MethodPut, "/index.html", router).Code)
 
+}
+
+func TestWrapHandlerV3OAuthRedirect(t *testing.T) {
+	router := echo.New()
+
+	router.Any("/*", EchoWrapHandlerV3())
+
+	w := performRequest(http.MethodGet, "/oauth2-redirect.html?code=abc123&state=xyz", router)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
 }
 
 func TestConfig(t *testing.T) {
