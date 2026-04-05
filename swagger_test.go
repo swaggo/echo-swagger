@@ -242,7 +242,7 @@ func TestWrapHandler(t *testing.T) {
 
 	w1 := performRequest(http.MethodGet, "/index.html", router)
 	assert.Equal(t, http.StatusOK, w1.Code)
-	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
+	assert.Equal(t, "text/html; charset=utf-8", w1.Header()["Content-Type"][0])
 
 	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
 
@@ -250,7 +250,7 @@ func TestWrapHandler(t *testing.T) {
 	swag.Register(swag.Name, doc)
 	w2 := performRequest(http.MethodGet, "/doc.json", router)
 	assert.Equal(t, http.StatusOK, w2.Code)
-	assert.Equal(t, w2.Header()["Content-Type"][0], "application/json; charset=utf-8")
+	assert.Equal(t, "application/json; charset=utf-8", w2.Header()["Content-Type"][0])
 
 	// Perform body rendering validation
 	w2Body, err := io.ReadAll(w2.Body)
@@ -259,15 +259,15 @@ func TestWrapHandler(t *testing.T) {
 
 	w3 := performRequest(http.MethodGet, "/favicon-16x16.png", router)
 	assert.Equal(t, http.StatusOK, w3.Code)
-	assert.Equal(t, w3.Header()["Content-Type"][0], "image/png")
+	assert.Equal(t, "image/png", w3.Header()["Content-Type"][0])
 
 	w4 := performRequest(http.MethodGet, "/swagger-ui.css", router)
 	assert.Equal(t, http.StatusOK, w4.Code)
-	assert.Equal(t, w4.Header()["Content-Type"][0], "text/css; charset=utf-8")
+	assert.Equal(t, "text/css; charset=utf-8", w4.Header()["Content-Type"][0])
 
 	w5 := performRequest(http.MethodGet, "/swagger-ui-bundle.js", router)
 	assert.Equal(t, http.StatusOK, w5.Code)
-	assert.Equal(t, w5.Header()["Content-Type"][0], "application/javascript")
+	assert.Equal(t, "application/javascript", w5.Header()["Content-Type"][0])
 
 	assert.Equal(t, http.StatusNotFound, performRequest(http.MethodGet, "/notfound", router).Code)
 
@@ -286,7 +286,7 @@ func TestWrapHandlerV3(t *testing.T) {
 
 	w1 := performRequest(http.MethodGet, "/index.html", router)
 	assert.Equal(t, http.StatusOK, w1.Code)
-	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
+	assert.Equal(t, "text/html; charset=utf-8", w1.Header()["Content-Type"][0])
 
 	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
 
@@ -294,7 +294,7 @@ func TestWrapHandlerV3(t *testing.T) {
 	swagV3.Register(swag.Name, doc)
 	w2 := performRequest(http.MethodGet, "/doc.json", router)
 	assert.Equal(t, http.StatusOK, w2.Code)
-	assert.Equal(t, w2.Header()["Content-Type"][0], "application/json; charset=utf-8")
+	assert.Equal(t, "application/json; charset=utf-8", w2.Header()["Content-Type"][0])
 
 	// Perform body rendering validation
 	w2Body, err := io.ReadAll(w2.Body)
@@ -303,15 +303,15 @@ func TestWrapHandlerV3(t *testing.T) {
 
 	w3 := performRequest(http.MethodGet, "/favicon-16x16.png", router)
 	assert.Equal(t, http.StatusOK, w3.Code)
-	assert.Equal(t, w3.Header()["Content-Type"][0], "image/png")
+	assert.Equal(t, "image/png", w3.Header()["Content-Type"][0])
 
 	w4 := performRequest(http.MethodGet, "/swagger-ui.css", router)
 	assert.Equal(t, http.StatusOK, w4.Code)
-	assert.Equal(t, w4.Header()["Content-Type"][0], "text/css; charset=utf-8")
+	assert.Equal(t, "text/css; charset=utf-8", w4.Header()["Content-Type"][0])
 
 	w5 := performRequest(http.MethodGet, "/swagger-ui-bundle.js", router)
 	assert.Equal(t, http.StatusOK, w5.Code)
-	assert.Equal(t, w5.Header()["Content-Type"][0], "application/javascript")
+	assert.Equal(t, "application/javascript", w5.Header()["Content-Type"][0])
 
 	assert.Equal(t, http.StatusNotFound, performRequest(http.MethodGet, "/notfound", router).Code)
 
@@ -362,19 +362,19 @@ func TestHandlerReuse(t *testing.T) {
 
 	w1 := performRequest(http.MethodGet, "/swagger/index.html", router)
 	assert.Equal(t, http.StatusOK, w1.Code)
-	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
+	assert.Equal(t, "text/html; charset=utf-8", w1.Header()["Content-Type"][0])
 
 	w2 := performRequest(http.MethodGet, "/admin/swagger/index.html", router)
 	assert.Equal(t, http.StatusOK, w2.Code)
-	assert.Equal(t, w2.Header()["Content-Type"][0], "text/html; charset=utf-8")
+	assert.Equal(t, "text/html; charset=utf-8", w2.Header()["Content-Type"][0])
 
 	w3 := performRequest(http.MethodGet, "/swagger/index.html", router)
 	assert.Equal(t, http.StatusOK, w3.Code)
-	assert.Equal(t, w3.Header()["Content-Type"][0], "text/html; charset=utf-8")
+	assert.Equal(t, "text/html; charset=utf-8", w3.Header()["Content-Type"][0])
 
 	w4 := performRequest(http.MethodGet, "/admin/swagger/index.html", router)
 	assert.Equal(t, http.StatusOK, w4.Code)
-	assert.Equal(t, w4.Header()["Content-Type"][0], "text/html; charset=utf-8")
+	assert.Equal(t, "text/html; charset=utf-8", w4.Header()["Content-Type"][0])
 }
 
 type httpWriter struct{}
