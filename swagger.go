@@ -11,8 +11,7 @@ import (
 
 	"github.com/labstack/echo/v5"
 	swaggerFiles "github.com/swaggo/files/v2"
-	"github.com/swaggo/swag"
-	swagV2 "github.com/swaggo/swag/v2"
+	"github.com/swaggo/swag/v2"
 	"sigs.k8s.io/yaml"
 )
 
@@ -246,14 +245,14 @@ func EchoWrapHandlerV3(options ...func(*Config)) echo.HandlerFunc {
 		case "index.html":
 			_ = index.Execute(c.Response(), config)
 		case "doc.json":
-			doc, err := swagV2.ReadDoc(config.InstanceName)
+			doc, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
 				return c.String(http.StatusInternalServerError, err.Error())
 			}
 
 			_, _ = c.Response().Write([]byte(doc))
 		case "doc.yaml":
-			jsonString, err := swagV2.ReadDoc(config.InstanceName)
+			jsonString, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
 				return c.String(http.StatusInternalServerError, err.Error())
 			}
