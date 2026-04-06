@@ -8,9 +8,7 @@ import (
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
-	"github.com/swaggo/swag"
-
-	swagV3 "github.com/swaggo/swag/v2"
+	"github.com/swaggo/swag/v2"
 )
 
 type mockedSwag struct{}
@@ -288,15 +286,13 @@ func TestWrapHandlerV3(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w1.Code)
 	assert.Equal(t, w1.Header()["Content-Type"][0], "text/html; charset=utf-8")
 
-	assert.Equal(t, http.StatusInternalServerError, performRequest(http.MethodGet, "/doc.json", router).Code)
-
-	doc := &mockedSwag{}
-	swagV3.Register(swag.Name, doc)
+	// Doc already registered by TestWrapHandler via swag.Register(swag.Name, doc)
 	w2 := performRequest(http.MethodGet, "/doc.json", router)
 	assert.Equal(t, http.StatusOK, w2.Code)
 	assert.Equal(t, w2.Header()["Content-Type"][0], "application/json; charset=utf-8")
 
 	// Perform body rendering validation
+	doc := &mockedSwag{}
 	w2Body, err := io.ReadAll(w2.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, doc.ReadDoc(), string(w2Body))
@@ -460,7 +456,7 @@ func TestInstanceNameV3(t *testing.T) {
 	assert.Equal(t, expected, cfg.InstanceName)
 
 	newCfg := newConfig(InstanceName(""))
-	assert.Equal(t, swagV3.Name, newCfg.InstanceName)
+	assert.Equal(t, swag.Name, newCfg.InstanceName)
 }
 
 func TestPersistAuthorization(t *testing.T) {
