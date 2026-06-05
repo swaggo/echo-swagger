@@ -23,6 +23,7 @@ type Config struct {
 	DocExpansion         string
 	DomID                string
 	InstanceName         string
+	Title                string
 	DeepLinking          bool
 	PersistAuthorization bool
 	SyntaxHighlight      bool
@@ -86,6 +87,13 @@ func InstanceName(instanceName string) func(*Config) {
 	}
 }
 
+// Title specifies the HTML page title. Default is "Swagger UI".
+func Title(title string) func(*Config) {
+	return func(c *Config) {
+		c.Title = title
+	}
+}
+
 // PersistAuthorization Persist authorization information over browser close/refresh.
 // Defaults to false.
 func PersistAuthorization(persistAuthorization bool) func(*Config) {
@@ -106,6 +114,7 @@ func newConfig(configFns ...func(*Config)) *Config {
 		DocExpansion:         "list",
 		DomID:                "swagger-ui",
 		InstanceName:         "swagger",
+		Title:                "Swagger UI",
 		DeepLinking:          true,
 		PersistAuthorization: false,
 		SyntaxHighlight:      true,
@@ -276,7 +285,7 @@ const indexTemplate = `<!-- HTML for static distribution bundle build -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Swagger UI</title>
+  <title>{{.Title}}</title>
   <link rel="stylesheet" type="text/css" href="./swagger-ui.css" >
   <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
   <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />

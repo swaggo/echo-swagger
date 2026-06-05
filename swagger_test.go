@@ -463,6 +463,26 @@ func TestInstanceNameV3(t *testing.T) {
 	assert.Equal(t, swagV3.Name, newCfg.InstanceName)
 }
 
+func TestTitle(t *testing.T) {
+	var cfg Config
+
+	expected := "custom-title"
+	Title(expected)(&cfg)
+	assert.Equal(t, expected, cfg.Title)
+
+	newCfg := newConfig()
+	assert.Equal(t, "Swagger UI", newCfg.Title)
+}
+
+func TestTitleRendered(t *testing.T) {
+	router := echo.New()
+	router.Any("/*", EchoWrapHandler(Title("My API")))
+
+	w := performRequest("GET", "/index.html", router)
+	assert.Equal(t, 200, w.Code)
+	assert.Contains(t, w.Body.String(), "<title>My API</title>")
+}
+
 func TestPersistAuthorization(t *testing.T) {
 	var cfg Config
 	expected := true
